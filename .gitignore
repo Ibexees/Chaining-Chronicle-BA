@@ -100,3 +100,4 @@ InitTestScene*.unity*
 
 /.sonarqube
 /sonarGuide.txt
+/measureSnapshot.ps1
