@@ -1,2 +1,0 @@
-[string]$timestamp = Get-Date -Format "yyyy-MM-dd"
-sonar-measures-export -k BachelorThesisAIArchitecture -m _main -t squ_d03f6df41d8d374a7acb10daec585f8cfe1cbaa4 -f sonarHistory\"${timestamp}_measures.csv"
