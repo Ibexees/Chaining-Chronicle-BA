@@ -3,7 +3,7 @@ namespace sonar
 {
     public class ForceSonarMainProject : AssetPostprocessor
     {
-        private static string OnGeneratedCSProject(string content)
+        private static string OnGeneratedCSProject(string path, string content)
         {
             const string marker = "<PropertyGroup>";
             int index = content.IndexOf(marker);

@@ -101,3 +101,16 @@ InitTestScene*.unity*
 /.sonarqube
 /sonarGuide.txt
 /measureSnapshot.ps1
+
+# MCP plugin (AI Game Developer): local connection config with token, generated skills, auto-installed NuGet dependencies
+/.mcp.json
+/.claude/
+/[Aa]ssets/Plugins/NuGet/
+/[Aa]ssets/Plugins/NuGet.meta
+/[Aa]ssets/Plugins.meta
+
+# Generated solution copy (Unity names it after the folder), the tracked "Chaining Chronicle BA.slnx" stays
+/Chaining_Chronicle_BA.slnx
+
+# Rider
+.idea/
