@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45c9353d08291454ba92a442495bf5f4, type: 3}
+  m_Name: Snow
+  m_EditorClassIdentifier: CC.Data::CC.Data.BiomeDef
+  id: snow
+  floorSprites:
+  - {fileID: 21300000, guid: 9c10293ff2aa35941b028d19da324f53, type: 3}
+  wallSprites:
+  - {fileID: -1928192551, guid: e32a69fef18c9d8409bee8daa136d1b2, type: 3}
+  stairsSprite: {fileID: 21300000, guid: b9e667937c47d6b4d87414b1edb4689a, type: 3}
+  enemies:
+  - {fileID: 11400000, guid: 7d25eb17b45cd3b44bdcadc9540371f5, type: 2}
+  - {fileID: 11400000, guid: ba5556f3de8bde042aeb565211dc9f00, type: 2}
+  - {fileID: 11400000, guid: 13236bdf3730c09439b3282ffc61d289, type: 2}

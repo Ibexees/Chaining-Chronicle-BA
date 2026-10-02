@@ -1,0 +1,19 @@
+{
+    "name": "CC.Editor",
+    "rootNamespace": "CC.Editor",
+    "references": [
+        "CC.Core",
+        "CC.Data"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
