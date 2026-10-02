@@ -1,0 +1,299 @@
+
+Game Design Document
+for
+<Chaining Chronicle>
+Version 1.0 approved
+Prepared by Marius Marik
+<06.03.2026>
+
+Table of Contents
+1.	Game Overview	1
+1.1	Game Concept	1
+1.2	Genre	1
+1.3	Target Audience	1
+1.4	Game Flow Summary	1
+1.5	Look and Feel	2
+2.	Gameplay and Mechanics	2
+2.1	Gameplay	2
+2.1.1	Game Progression	2
+2.1.2	Mission / challenge Structure	2
+2.1.3	Puzzle Structure	2
+2.1.4	Objectives	2
+2.1.5	Play Flow	3
+2.2	Mechanics	3
+2.2.1	. Physics	3
+2.2.2	Movement in the game	3
+2.2.3	Objects	3
+2.2.4	Actions	3
+2.2.5	Combat	4
+2.2.6	Economy	5
+2.2.7	Screen Flow	5
+2.3	. Game Options –	5
+2.4	Replaying and Saving	5
+2.5	Cheats and Easter Eggs	5
+3.	Story, Setting and Character	6
+3.1	Story and Narrative	6
+3.2	Game World	6
+3.2.1	General look and feel of world	6
+3.2.2	Areas	6
+3.3	Characters	6
+4.	Levels	7
+4.1	Levels.	7
+4.2	Training Level	7
+5.	Interface	8
+5.1	Visual System	8
+5.2	Control System	8
+5.3	Audio, music, sound effects	10
+5.4	Help System	10
+6.	Artificial Intelligence	10
+6.1	Opponent and Enemy AI	10
+6.2	Non-combat and Friendly Characters	10
+6.3	Support AI	11
+7.	Technical	11
+7.1	Target Hardware	11
+7.2	Development hardware and software, including Game Engine	12
+7.3	Network requirements	12
+8.	Game Art	12
+9.	Requirements	13
+9.1	Must	13
+9.2	Should	13
+9.3	Could	13
+
+
+Revision History
+NameDateReason For ChangesVersionMarius Marik27.02Initialised Document0.1Marius Marik06.03Completed Version 1.01.0
+
+
+1. Game Overview
+1.1 Game Concept
+Provide a high-level summary of the game idea, its core mechanics, and unique selling points. Describe the inspiration or vision behind the game and what experience it aims to deliver to players.
+The game Chaining Chronicle aspires to be a roguelike with permadeath mechanics. You start out on relatively easy stages that proceed to get harder as you continue on. The main selling point would be the twist on the combat system. Unlike within a traditional turn-based combat system attacks can chain into another and even other party members can join the chain if the afflicted status matches their follow up condition.
+
+1.2 Genre
+Define the genre(s) of the game (e.g., action, role-playing, puzzle), explaining how it aligns with the overall concept.
+
+The Chaining Chronicle is a rogue like with turn based combat mechanics. Its exploration could be described as a dungeon crawler similar to the mystery dungeon series.
+1.3 Target Audience
+Identify the primary audience based on demographics, interests, and gaming habits. Specify age group, skill level, and any specific preferences or needs.
+
+The primary audience would be fans of turn based RPGs that search for a fresh twist during combat and also like rouge likes
+1.4 Game Flow Summary
+Describe the progression of the game from start to finish. Include how the player transitions between different stages, modes, or levels. 
+
+The player starts on a randomly generated stage with stairs to the next stage and enemies scouting the area. When the tile of the player overlaps with the tile an enemy is on, combat starts. Combat is done when the enemy or the player is defeated. Then the progression through the stages continues. On these stages upgrades like armor and chaining skills can be found
+
+
+1.5 Look and Feel
+Summarize the intended aesthetic style, including graphical tone, art direction, and mood. Mention inspirations or themes (e.g., futuristic, fantasy).
+
+Chaining Chronicle will be a pixel-art based game inspired by the likes of Zelda Links Awakening, and early Dragon Quest. Concretely this comprises of a top down 2d view of the stages to explore and a 2d combat screen
+2. Gameplay and Mechanics
+2.1 Gameplay
+2.1.1 Game Progression
+Outline how players advance in the game, including level structure, storyline progression, or open-world exploration.
+
+Players fight through stages and try to achieve the highest Stage number in s high score approach. The MVP will not feature a storyline.
+2.1.2 Mission / challenge Structure
+Detail how missions or challenges are organized, including objectives, conditions for success, and replayability.
+
+The MVP will only feature the “Stage Attack” mode which represents the main gameplay of fighting through stages to reach a new highscore
+2.1.3 Puzzle Structure
+If applicable, explain how puzzles are designed, their types, and how they integrate into the gameplay.
+
+The MVP will not feature puzzles
+2.1.4 Objectives
+List the primary and secondary objectives for players, such as completing quests, solving puzzles, or defeating enemies.
+
+The main objective is to reach a highscore stage. To achieve this the player will have to collect powerups, to defeat enemies standing in the way.
+2.1.5 Play Flow
+Describe the expected rhythm and pacing of the gameplay, including combat intensity, exploration phases, or moments of rest.
+
+While Chaining Chronicle has a small exploration aspect via trying to find the stage exit and power ups while doing so, the main focus will definitely be combat. While trying to progress you will have to fight and try to stay alive a lot. The player also has to wager if fighting for the experience points is worth it or too risky regarding their health pool.
+2.2 Mechanics
+2.2.1 . Physics 
+Explain how the game incorporates physical interactions, such as gravity, collisions, or fluid dynamics.
+
+Chaining chronicle will only feature simple physics like collision with walls and enemies. There will be no other representation of physics
+2.2.2 Movement in the game 
+Detail how players or objects move, including controls, animations, and any unique traversal mechanics.
+
+The movement will be grid-based similar to the (Pokémon-) Mystery Dungeon series. In a later version there could also be power ups that let the Player traverse different terrain like water, or chasms
+2.2.3 Objects 
+Describe how you interact with objects in the game.
+
+Enemies encountered on the current stage are interacted with via collision by standing on the same tile. Other Objects like power ups are interacted with by standing on a adjacent tile, facing the object and hitting the interact key
+2.2.4 Actions 
+Summarize the range of player actions, such as running, jumping, interacting, or special abilities.
+
+The Player can only move and interact with the environment via the “interact key”. The interact key is context sensitive and can lead to different outcomes regarding the circumstance it is used in.
+
+
+2.2.5 Combat 
+If applicable, outline the combat system, including weapons, skills, or tactics used by the player.
+
+When entering combat, usually the player gets to start. If a player has multiple members in their party the member with the highest speed stat starts. 
+TODO:
+Finishers that are only enabled if the ChainCounter is maxed
+Limiting use of same skill in one chain from one character.
+Enemies can use heal skills
+Status Effects
+Damage Multipliers
+Statsmenu button opens Contextwindow that explains stat
+Classesmodules represent Statgrowths and maybe passives, can be swapped and determine the skills learned on level up
+Metaprogression, unlockable Skills, Biomes, 
+ChainCounter in CombatScene
+
+
+2.2.6 Economy 
+Describe in-game resources, currencies, or trading systems and how they impact gameplay.
+
+In the MVP version of the game the only resources are the power ups that can be found and the skill slots they are allotted to. Currently there are no plans of implementing currency, shops or trading. Though in the future there might be a skill tree for permanent progression.
+2.2.7 Screen Flow 
+Explain transitions between menus, gameplay screens, and other UI elements.
+Mockups
+The main screen transitions are from the stage to the combat screen and back. Here the HUD will be altered greatly. Another transition could be from the stage to a menu but this will not be a focus of the MVP
+2.3 . Game Options 
+List available customization options, such as difficulty settings, visual tweaks, or control mappings.
+
+Options are not a priority in the MVP. There will be one fixed difficulty setting. Controls will be rather simple and not a focus point, but mappings should be offered. 
+2.4  Replaying and Saving 
+Detail how the game supports save files, checkpoints, and replayability (e.g., multiple endings or new game modes).
+
+As Chaining Chronicle does not offer any meta progression in the MVP the only thing that will be stored permanently is the leaderboard.
+2.5 Cheats and Easter Eggs 
+Optionally, describe hidden content, cheats, or playful secrets for players to discover.
+
+Not initially planned but might be added later on. Maybe a dev mode could be implemented to test features and balancing
+3. Story, Setting and Character 
+3.1 Story and Narrative 
+Summarize the game's story, narrative structure, and key plot points. Highlight themes and emotional impact.
+
+Chaining Chronicle will not feature story or exposition in the MVP.
+3.2 Game World 
+3.2.1 General look and feel of world 
+Describe the overall world design, including aesthetic style, atmosphere, and tone.
+
+As there is no cohesive world but rather many stages, each stage can represent another environment. This will be achieved through pallet swapping the pixel art tiles. A small hub world to check the leaderboards is the only place except for the stages.
+3.2.2 Areas 
+Provide an overview of different areas or locations in the game, their purpose, and distinct characteristics.
+
+See 3.2.1
+3.3 Characters 
+List major characters, including protagonists, antagonists, and NPCs. Describe their roles, backstories, and personalities
+
+There will be no character exposition in the MVP. The player should be able to name his character for the run and other found party members will have their name allocated by a predefined pool.
+
+
+
+4. Levels 
+
+4.1 Levels. 
+Describe the level structure, design principles, and layout. Mention how levels tie into the gameplay and story.
+
+Chaining Chronicle will offer a endless amount of randomly generated stages that increase in difficulty.
+4.2 Training Level / Tutorial
+Explain the purpose and content of the tutorial or training level. Highlight key mechanics introduced to players.
+
+Chaining Chronicle does not need a Tutorial level as it strives to be a learning by doing experience like many other roguelikes.
+
+
+
+5. Interface 
+
+5.1 Visual System
+Detail the visual layout of menus, HUD (Heads-Up Display), and other interface elements.
+
+All in all the HUD will look pretty similar to games like siralim Ultimate and only feature the strict necessities. While exploring not much is needed only notification if something extraordinary is happening on this stage.
+In Combat you will get an overview of your health as well as the enemies health and Menues to pick your actions. Also a combat log which documents the happening of the previous turns could be implemented.
+Combat Screen of Siralim Ultimate:		Exploration Screen of Siralim Ultimate
+
+5.2 Control System 
+Explain the control scheme, including input devices and key bindings.
+
+Controls will be rather simple as the game is set in a 2D world and focuses on combat and not interesting movements. The Control scheme will look something like:
+
+Octopath traveler, https://www.reddit.com/r/octopathtraveler/comments/p21koj/the_best_lefthanded_keyboard_controls/
+
+
+
+5.3 Audio, music, sound effects 
+Summarize the role of audio in creating the game's atmosphere. Mention specific design goals for music and sound effects.
+
+The MVP will not focus on music or sound effects. Only the most common actions will have corresponding sound effects as a proof of concept. Per Stage a different track of copyright free music could be played (no separate combat theme in the MVP).
+5.4 Help System 
+Describe tools available to assist players, such as tutorials, hints, or documentation.
+
+The Chaining Chronicle itself could act as an tutorial book that explains mechanics and interactions within the game.
+6. Artificial Intelligence 
+6.1 Opponent and Enemy AI
+Describe how enemy characters behave, including attack strategies and adaptive tactics.
+
+Enemies basically work pretty much exactly like the player-controlled characters but instead of the player choosing a move something like a finite state machine will control the enemy in the MVP. This will be very basic, something like if player character is in kill range target that player character or if own health <30% prioritize healing moves. If this proves to be too complex moves will be chosen randomly. 
+
+Enemies will also need an AI to move through the stages and seek the player, and not run into walls etc.
+6.2 Non-combat and Friendly Characters 
+Explain the behaviors of NPCs, companions, or other non-hostile entities.
+
+Currently no friendly NPCs are planned.
+6.3 Support AI 
+Detail any AI systems that assist the player, such as auto-aim or hint systems.
+Currently not planned.
+7. Technical 
+7.1 Target Hardware 
+List the platforms the game will support, such as PC, consoles, or mobile devices.
+The target hardware will only be PCs. Chaining Chronicle aims to be runnable on every machine and should not require hefty amounts of computing power
+
+
+
+7.2 Development hardware and software, including Game Engine 
+Describe the tools, technologies, and game engines used for development.
+
+The game will be built in Unity Engine. Aseprite will be used for pixel art and all other graphical necessities
+7.3 Network requirements 
+Mention online capabilities, such as multiplayer, cloud saving, or leaderboards.
+An online leaderboard will be aspired
+8. Game Art 
+Summarize the art direction, including style guides, asset types, and creation workflows.
+
+These are all sprites made by me. These should provide a general direction especially inspired by games from the 8bit -Gameboy era and the 16bit SNES era. (These should all be animated Gifs but these will probably turn into static pictures after converting this document to pdf)
+
+
+9. Requirements
+9.1 Must
+List non-negotiable requirements essential to the game's functionality.
+Chaining Chronicle must provide the player with continuous stages that can be explored
+Chaining Chronicle must provide the player with the ability to combat enemies
+Chaining Chronicle must provide the player with the ability to collect power ups
+Chaining Chronicle must provide an persistent offline leaderboard to keep track of high scores.
+When exploring the stage, Chaining Chronicle must implement player movement and collision
+When exploring the stage, Chaining Chronicle must implement enemy AI-movement and collision
+
+9.2 Should
+Mention important but flexible requirements.
+
+Chaining Chronicle should provide basic sound effect handling
+
+Chaining Chronicle should provide basic music handling
+
+Chaining Chronicle should be runnable on every modern PC and should not require a dedicated graphics card or high end System
+
+
+9.3 Could
+Describe optional features or enhancements.
+Chaining Chronicle could provide dedicated music and sound effects
+
+For general settings, or quitting the game, Chaining Chronicle could provide a menu, which can be accessed while on a stage.
+Appendix A: Glossary
+<Define all the terms necessary to properly interpret the GDD, including acronyms and abbreviations. You may wish to build a separate glossary that spans multiple projects or the entire organization, and just include terms specific to a single project in each GDD.>
+Appendix B: Analysis Models
+<Optionally, include any pertinent analysis models, such as data flow diagrams, class diagrams, state-transition diagrams, or entity-relationship diagrams.>
+Appendix C: Issues List
+< This is a dynamic list of the open requirements issues that remain to be resolved, including TBDs, pending decisions, information that is needed, conflicts awaiting resolution, and the like.>
+
+
+Game Design Document for <Project>		Page ii
+
+
+
+Game Design Document for Chaining Chronicle		Page 6
+
