@@ -28,7 +28,7 @@ Kontext: Bachelorarbeit. Chaining Chronicle wird nach dem GDD mit Claude Code ne
 - Flucht ist möglich. Bei Flucht verschwindet der Gegner von der Stage.
 - Sieg: Gegner wird entfernt. Niederlage: Run endet (Permadeath).
 - Flucht gelingt garantiert, bis weitere Balancing-Entscheidungen fallen (`fleeChance` 1.0). Die Kettenobergrenze gilt je Kette (Startwert 5). Bei Speed-Gleichstand zieht die Spieler-Party zuerst. Follow-ups sind Bonusaktionen im Zug des Auslösers, Ketten ändern die Zugreihenfolge grundsätzlich nicht. Später können Angriffseffekte die Reihenfolge ändern, `TurnOrder` braucht dafür Modifikatoren.
-- **Noch ungeprüfte KI-Annahmen A15–A22** (Stage System: Treppe per Interact-Taste, Pickups blockieren und werden von vorne eingesammelt, blockierter Schritt kostet keinen Zug, Verfolgungsreichweite 7, Skalierung, Biome, Gegnerfreischaltung): siehe Architekturkonzept Abschnitt 11. Dem Autor zur Bestätigung vorlegen.
+- **Bestätigte KI-Annahmen A15–A24** (vom Autor am 11.10.2026 bestätigt). Stage System: Treppe per Interact-Taste, Pickups blockieren und werden von vorne eingesammelt, blockierter Schritt kostet keinen Zug, Verfolgungsreichweite 7, Skalierung, Biome, Gegnerfreischaltung. Darstellung: Idle-Posen je Blickrichtung (A23), Geh-Zyklus über zwei Schritte (A24). Siehe Architekturkonzept Abschnitt 11. Neue Annahmen weiterhin vor dem nächsten Meilenstein vorlegen.
 - Weitere Partymitglieder kommen als Fund auf der Stage, Namen aus festem Pool. Hub ist ein Menübild, kein begehbarer Raum. Stages sind Räume + Gänge, seed-basiert. Leaderboard-Eintrag pro beendetem Run, Anzeige Top-10.
 
 ## Arbeitsweise (Pflicht wegen der Methodik der BA)
@@ -50,7 +50,8 @@ Kontext: Bachelorarbeit. Chaining Chronicle wird nach dem GDD mit Claude Code ne
 - **Play-Mode-Tests per MCP:** Ist der Editor nicht fokussiert, tickt der Player Loop kaum und das Input System verwirft Tasten. Frames deshalb mit `EditorApplication.isPaused = true` und je Aufruf einem `EditorApplication.Step()` erzeugen. Eingaben simulieren, indem die C#-Events des `InputRouter` (`MoveRequested`, `InteractPressed`, `ConfirmPressed`, `CancelPressed`) per Reflection ausgelöst werden. `stepSeconds` des `StageController` auf 0 setzen, damit Animationen sofort enden. Immer vom `Boot`-Szene aus starten.
 - **Screenshots:** Es gibt kein Game-View-Werkzeug. Kamera per `script-execute` in eine `RenderTexture` rendern, als PNG in das Scratchpad speichern und mit Read ansehen.
 - `console-get-logs` zeigt immer Stacktraces. Mit `logTypeFilter`, `lastMinutes` und kleinem `maxEntries` eingrenzen. Die Exception `TargetParameterCountException` aus `com.unity.ide.visualstudio` ist bekannt und harmlos.
-- Inhalte (Animator Controller, Clips, `EnemyDef`, `BiomeDef`, `GameContent`) entstehen über das Menü **Chaining Chronicle > Build Content** (`Assets/Scripts/Editor/ContentBuilder.cs`), nie von Hand. Die Baseline-Clips in `Assets/Export` zeigen wegen abweichender GUIDs kein Sprite, der Builder erzeugt korrigierte Kopien in `Assets/Content/Animations`. Wiederholbar.
+- Inhalte (Animator Controller, Clips, `EnemyDef`, `BiomeDef`, `GameContent`) entstehen über das Menü **Chaining Chronicle > Build Content** (`Assets/Scripts/Editor/ContentBuilder.cs`), nie von Hand. Die Baseline-Clips in `Assets/Export` zeigen wegen abweichender GUIDs kein Sprite, der Builder erzeugt korrigierte Kopien in `Assets/Content/Animations`. Wiederholbar. Der Build ruft zuerst `SpritePivotNormalizer` auf (alle Sprites in `Assets/Export` bekommen Pivot Mitte, auch einzeln über **Chaining Chronicle > Normalize Sprite Pivots**).
+- **Animationen testen ohne Player Loop:** Eine `PlayerView` (über `EntityView.Create<PlayerView>`) lässt sich per `Animator.Update(dt)` Bild für Bild antreiben und das Sprite je Frame protokollieren. Das geht synchron in einem `script-execute` und braucht keinen fokussierten Editor. Vorlage: Abschnitt B6 im Architekturkonzept.
 - Namespaces: `CC.Core.*`, `CC.Data.*`, `CC.Game.*`, `CC.Tests.*`. Code-Bezeichner Englisch, Dokumentation Deutsch.
 
 ## Teststrategie
@@ -61,12 +62,12 @@ Kontext: Bachelorarbeit. Chaining Chronicle wird nach dem GDD mit Claude Code ne
 ## Aktueller Stand
 
 - Fundament fertig: Assemblies, `GameEvents`, `IRng`/`SeededRng`, `GameFlowMachine`, `GameFlow`, `InputRouter`, `Bootstrapper`, Szenen `Boot`/`Hub`/`Stage` (in den Build Settings).
-- **Stage System fertig** (Core: `TileGrid`, `DistanceMap`, `Pathfinder`, `StageGenerator`, `StageValidator`, `StageRules`, `StageSession`, `ChaseOrWanderMover`, `RunState`. Game: `StageView`, `StageController`, `PlayerController`, `EntityViews`, `StageCameraFollow`. Data: `EnemyDef`, `BiomeDef`, `GameContent`). 94 EditMode-Tests grün, Ablauf Hub → Stage → Treppe → nächste Stage und Gegnerkollision → Kampf → Flucht im Play Mode geprüft.
+- **Stage System fertig, visuelle Fehler am 11.10.2026 behoben** (Pivot, Blickrichtung als Idle je Richtung, durchlaufende Geh-Animation, Annahmen A23 und A24 bestätigt). Core: `TileGrid`, `DistanceMap`, `Pathfinder`, `StageGenerator`, `StageValidator`, `StageRules`, `StageSession`, `ChaseOrWanderMover`, `RunState`. Game: `StageView`, `StageController`, `PlayerController`, `EntityViews`, `StageCameraFollow`. Data: `EnemyDef`, `BiomeDef`, `GameContent`. 102 EditMode-Tests grün, Ablauf Hub → Stage → Treppe → nächste Stage und Gegnerkollision → Kampf → Flucht im Play Mode geprüft.
 - Platzhalter, die ersetzt werden: `TempCombatStub` (Combat), `StageDebugOverlay` und `HubController`-IMGUI (UI). Siehe Architekturkonzept 13.3.
 - Pickups werden eingesammelt und als `PowerUpCollected` gemeldet, haben aber noch keinen Effekt (Inventar kommt mit Combat/Party).
 - Nächster Meilenstein: **Combat System** (`Combatant`, `Skill`, `CombatSession`, `TurnOrder`, `ChainResolver`, `FsmEnemyBrain`, XP, Party, `CombatView`). Der Einstieg `EnemyEngaged` und das Entfernen über `StageController.ResolveEngagement` sind vorhanden.
 
 ## Vorhandene Assets (Baseline, nicht verändern)
 
-`Assets/Export/` enthält Sprites, Animationen und Audio der Baseline-Implementierung (Charakter, Gegner, Effekte, Tiles, MP3-Clips). Wiederverwenden, nicht neu erzeugen.
+`Assets/Export/` enthält Sprites, Animationen und Audio der Baseline-Implementierung (Charakter, Gegner, Effekte, Tiles, MP3-Clips). Wiederverwenden, nicht neu erzeugen. Einzige freigegebene Änderung: der Pivot (Importeinstellung, nur `.meta`) wird auf Mitte gesetzt, damit alle Sprites denselben Bezugspunkt haben (D6).
 `Assets/Plugins/NuGet` und `Assets/Editor/ForceSonarMainProject.cs` gehören zum MCP-Plugin bzw. zum SonarQube-Setup, nicht anfassen.

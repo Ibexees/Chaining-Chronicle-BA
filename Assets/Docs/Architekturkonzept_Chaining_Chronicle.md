@@ -5,7 +5,7 @@
 | Basis | `GDD_Chaining_Chronicle` v1.0 (06.03.2026) |
 | Engine | Unity 6000.3.8f1, URP 2D, Input System 1.18, 2D Tilemap, Test Framework 1.6 |
 | Erstellt von | Claude Code (Sonnet 5.5), Prompt: "Architekturkonzept basierend auf dem GDD" |
-| Stand | 02.10.2026, Version 0.3 (A11–A14 bestätigt, Stage System umgesetzt, Befunde in Abschnitt 13) |
+| Stand | 11.10.2026, Version 0.5 (Fehlerbehebung Stage System: Pivot, Blickrichtung, Geh-Animation; A15–A24 bestätigt, D6–D7 und B5–B8 vom Autor geprüft) |
 | Zweck | Methodik-Schritt "Architektur vor Umsetzung" (Folie 15), Grundlage für UF3 |
 
 Das Dokument beschreibt Ziele, Struktur, Verantwortlichkeiten und Reihenfolge. Es enthält bewusst keinen Implementierungscode. Alle Stellen, an denen das GDD nichts oder Mehrdeutiges sagt, sind in Abschnitt 11 als **Annahmen** gelistet (Material für UF4).
@@ -312,7 +312,7 @@ Folgeannahmen aus den Entscheidungen zu A1–A10. Aus Version 0.2 vorgeschlagen,
 | A13 | A4 Gleicher Speed | Wer zieht bei Gleichstand zuerst? | Spieler-Party vor Gegnern, dann feste Party-Reihenfolge | **Bestätigt** |
 | A14 | A4 Chaining und Reihenfolge | Verändert ein Follow-up die Zugreihenfolge? | Follow-ups sind Bonusaktionen im Zug des Auslösers, Reihenfolge bleibt | **Bestätigt:** Ketten beeinflussen die Reihenfolge grundsätzlich nicht. Später können Angriffseffekte die Reihenfolge verändern (siehe Abschnitt 10) |
 
-Neue Annahmen der KI beim Stage System (Meilenstein 03.10.), **noch nicht** vom Autor geprüft:
+Neue Annahmen der KI beim Stage System (Meilenstein 03.10.). **Alle bestätigt** vom Autor am 11.10.2026:
 
 | Nr | GDD-Stelle | Mehrdeutigkeit | Annahme der KI |
 |---|---|---|---|
@@ -324,6 +324,13 @@ Neue Annahmen der KI beim Stage System (Meilenstein 03.10.), **noch nicht** vom 
 | A20 | 2.2.6 | Welche Pickup-Arten gibt es und wie oft? | Armor, ChainSkill, Recruit im Verhältnis 2:2:1. Der Effekt (Inventar, Party) kommt mit dem Combat-Meilenstein, jetzt wird nur eingesammelt und das Ereignis gesendet |
 | A21 | 1.4 "enemies scouting the area" | Wie nah darf ein Gegner beim Start sein? | Mindestens 6 Laufschritte vom Startfeld. Die Treppe liegt im Raum mit der größten Laufentfernung zum Start |
 | A22 | Baseline-Gegner | Welche Gegner gibt es ab welcher Stage? | Nach den vorhandenen Sprites: mouse (1), hooddude (2), evileye (3), walrus (4), livingarmour (5), magmaegg (7). Verteilung auf Biome ist Platzhalter |
+
+Neue Annahmen der KI bei der Fehlerbehebung am Stage System (11.10.2026). **Beide bestätigt** vom Autor am 11.10.2026. Der Autor hat die Aufgabe "suche nach einer Lösung" gestellt, die konkrete Lösung ist eine Entscheidung der KI:
+
+| Nr | Bezug | Mehrdeutigkeit | Annahme der KI |
+|---|---|---|---|
+| A23 | 2.2.3 "facing the object", Baseline-Grafiken | Die Baseline hat nur eine Idle-Animation (nach unten). Wie sieht der stehende Spieler in die anderen Richtungen aus? | Nach unten bleibt die vorhandene animierte Idle-Animation. Nach oben, links und rechts steht der Spieler in der neutralen Pose (erstes Bild) des jeweiligen Geh-Clips, als stehendes Einzelbild. Rechts nutzt den vorhandenen `walkRight`-Clip, es wird nicht mehr gespiegelt. Neue Grafiken wurden nicht erzeugt |
+| A24 | 2.2.2 Rundenmodell, Geh-Animation | Wie lange dauert ein Geh-Zyklus im Verhältnis zum Schritt (0,14 s)? Wann geht der Spieler in Idle? | Ein Zyklus (Bein links, Mitte, Bein rechts, Mitte) umfasst zwei Schritte, also ein Fuß je Schritt (`stepsPerWalkCycle` = 2, einstellbar). Der Zyklus läuft über aufeinanderfolgende Schritte durch und wird nicht pro Schritt neu gestartet. Idle erst nach 0,06 s ohne weitere Eingabe |
 
 ---
 
@@ -351,6 +358,8 @@ Stand Stage System. Jeder Punkt ist ein Material für UF2 (Limitationen) oder UF
 | D3 | `InputSystem_Actions.inputactions` umbauen | Aktionen im Code definiert (`InputRouter`) | siehe 5.8 |
 | D4 | Zusätzlich zum Konzept | `StageValidator`, `DistanceMap`, `TurnResult`, `RunState`, `ContentBuilder` (Editor) | Notwendig für testbare Garantien (Treppe erreichbar), Animation der Views und reproduzierbaren Inhaltsaufbau |
 | D5 | Kampfübergang erst im Combat-Meilenstein | Übergang `Exploring → Combat → Exploring` ist verdrahtet, der Kampf selbst ist der Platzhalter `TempCombatStub` | Damit Gegnerkollision, Entfernen des Gegners (Sieg und Flucht) und der Wechsel der Eingabe schon jetzt prüfbar sind |
+| D6 | Baseline-Assets in `Assets/Export` bleiben unverändert (CLAUDE.md) | Die Importeinstellungen (Pivot) von `Tiles-Sheet.png` (16 Slices) und `SnowTile.png` wurden auf Mitte gesetzt. Nur die `.meta`-Dateien ändern sich, die Bilddateien nicht. Umsetzung durch `SpritePivotNormalizer`, aufgerufen vom `ContentBuilder` | Ausdrücklicher Auftrag des Autors (11.10.2026): alle Sprites verwenden denselben Pivot (B5) |
+| D7 | Player-Animator mit `idle` und drei Geh-Zuständen (v0.3) | Acht Zustände: `idle` und `walk` je Richtung (Oben, Unten, Links, Rechts), Float-Parameter `walkSpeed`. Geh-Clips werden vom `ContentBuilder` auf gleichmäßige Phasen und genau eine Sekunde Länge normiert, Idle-Posen aus den Geh-Clips abgeleitet. `PlayerView` kennt `Face`, `Walk`, `StopWalking` | Behebung von B6 und B7, siehe A23 und A24 |
 
 ### 13.2 Befunde
 
@@ -360,6 +369,10 @@ Stand Stage System. Jeder Punkt ist ein Material für UF2 (Limitationen) oder UF
 | B2 | **Testumgebung:** Ein nicht fokussierter Unity-Editor lässt den Player Loop im Play Mode praktisch stehen (Frame-Zähler bleibt), und das Input System verwirft Tastatureingaben. | Spieltests laufen nur mit `EditorApplication.Step()` und simulierten Events (Reflection auf `InputRouter`). Echte Tasten- und Echtzeittests sind per MCP nicht möglich und müssen vom Autor manuell geprüft werden |
 | B3 | **Tile-Auswahl nach Sicht.** Die erste Auswahl der Boden-Dekoration nach Index enthielt Objekte (Topf, Wasserstelle), die wie Pickups aussahen. Erst ein beschriftetes Bild des Tile-Sheets klärte die Zuordnung. | Die KI kann Sprite-Inhalt nur über gerenderte Bilder beurteilen. Index-Annahmen aus Metadaten sind unzuverlässig |
 | B4 | Die Debug-Ausgabe von `console-get-logs` liefert immer Stacktraces, auch mit `includeStackTrace: false`. | Erhöht den Kontextverbrauch bei der Diagnose (UF2) |
+| B5 | **Pivot der Bodentiles.** Die Slices von `Tiles-Sheet.png` waren mit Alignment "unten links" importiert, `SnowTile.png` ebenso. Entities und alle anderen Sprites haben einen Mittelpunkt-Pivot. Ergebnis: Der Spieler stand um 0,5 Einheiten in x und y versetzt zum Boden. Alle übrigen 156 Sprites waren schon zentriert. | Ursache in den Eingangsdaten (Baseline), nicht im KI-Code. Das Stage System hat den Pivot beim Zeichnen der Tiles nicht geprüft, sondern nur Pixel pro Einheit ausgeglichen. Bei der Abnahme am 02.10. wurde der Versatz nicht bemerkt (UF2: visuelle Fehler bleiben ohne Bildprüfung unsichtbar). Test `AllExportedSpritesShareTheCentrePivot` sichert das nun ab |
+| B6 | **Geh-Animation zeigte ein Bild.** Ein Schritt dauert 0,14 s, die Geh-Clips der Baseline 0,6 bis 1,4 s. Der Code rief pro Schritt `Animator.Play` auf (Neustart bei 0) und danach sofort Idle. Es erschien nur das erste Bild des Zyklus, zwischen den Schritten blitzte Idle auf. | Fehler im KI-Code. Die Prüfung am 02.10. kontrollierte nur, dass ein Sprite sichtbar ist (B1), nicht den zeitlichen Verlauf. Jetzt als Bildfolge pro Frame belegt (siehe Zeitlog, Kennzahlen Fehlerbehebung) |
+| B7 | **Gespiegelter Clip statt vorhandenem `walkRight`.** `PlayerView` hat Rechts durch Spiegeln von `walkLeft` ersetzt, obwohl `walkRight.anim` mit eigenen Sprites existiert (Atlas-Zeile 5). | Eigene Annahme ("drei Richtungen") wurde nicht gegen die Assets geprüft. Fehler im KI-Code, beim Beheben von B6 entdeckt |
+| B8 | **Länge von Sprite-Clips.** Unity setzt die Länge eines Sprite-Clips auf letzten Key plus ein Bild (bei 60 fps 1,0167 s statt 1 s). | Aufgefallen durch einen fehlgeschlagenen Test beim ersten Lauf. Der Schlusskey liegt nun ein Bild vor der Sekunde |
 
 ### 13.3 Temporäre Platzhalter (werden ersetzt)
 

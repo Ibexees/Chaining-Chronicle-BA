@@ -15,6 +15,7 @@ Zweck: Nachweis für UF1 (Effizienz) und UF3 (Architekturmetriken), Anforderung 
 
 | 6 | 02.10.2026 | Architekturkonzept | A11–A14 vom Autor geprüft | Antworten zu A11–A14, "Baue jetzt das Stage System weiter" | n. g. (in Zeile 7 enthalten) | n. g. (kurz) | Konzept v0.3: alle vier bestätigt bzw. präzisiert (A12) | A14: neuer Erweiterungspunkt für Zugreihenfolge-Effekte |
 | 7 | 02.10.2026 | Gameplay-Systeme | **Stage System** (Grid, Generator, Session, Gegnerbewegung, Pathfinder, Views, Controller, Content, Szenen) inkl. Dokumentation | "Baue jetzt das Stage System weiter" | ca. 23 min (16:41–17:04) inkl. Diagnose und Dokumentation | offen | Funktionsfähiger Ablauf Hub → Stage → Treppe → Stage 2 und Gegnerkontakt → Kampfplatzhalter → Flucht, 94 Tests grün | Größter Zeitanteil: Diagnose der unsichtbaren Sprites (B1) und Play-Mode-Tests im nicht fokussierten Editor (B2). Details in Konzept Abschnitt 13 |
+| 8 | 11.10.2026 | Gameplay-Systeme | **Fehlerbehebung Stage System:** Pivot der Bodentiles (B5), Blickrichtung mit Idle je Richtung (A23, B7), Geh-Animation (B6, A24) | Drei visuelle Fehler benannt: Pivot, fehlende Idle-Animationen je Blickrichtung, Geh-Animation zeigt nur ein Bild und wird von Idle unterbrochen | ca. 12 min (12:49–13:01) inkl. Dokumentation | offen | Pivot aller 173 Sprites einheitlich Mitte, 8 Animator-Zustände (Idle und Gehen je Richtung), Zyklus läuft über Schritte durch. 102 Tests grün (+8), im Play Mode geprüft (Bildfolge je Frame, Screenshot der Stage) | Die Fehler B6 und B7 lagen im KI-Code, B5 in den Eingangsdaten. Zwei Entscheidungen der KI (A23, A24) vom Autor bestätigt, ebenso A15–A22 und die Dokumentation (D6, D7, B5–B8). Echtzeit und Optik (Tempo des Zyklus) per MCP nicht beurteilbar, bitte einmal in der Stage ansehen |
 
 n. g. = nicht gemessen.
 
@@ -56,6 +57,22 @@ Zeitverlauf der KI-Arbeit am Stage System, nach Zeitstempeln der Werkzeugaufrufe
 | Dokumentation (Konzept, Log, CLAUDE.md) | 17:02–17:04 | ca. 2 min |
 
 Beim ersten Kompilieren liefen alle 84 Core-Tests ohne Korrektur. Fehler traten nur bei den Inhalten und der Testumgebung auf (B1–B3).
+
+## Kennzahlen Fehlerbehebung Stage System (11.10.2026, Zeile 8)
+
+| Metrik | Wert |
+|---|---|
+| Neue Quelldateien (`.cs`) | 2 (`SpritePivotNormalizer`, `PlayerVisualsTests`) |
+| Geänderte Quelldateien | 3 `.cs` (`ContentBuilder`, `EntityViews`, `StageController`) + 2 `.asmdef` |
+| Geänderte Zeilen in `Assets/Scripts` und `Assets/Tests` (git diff, ohne neue Dateien) | +199 / -35 |
+| Geänderte Klassen | 3 (`PlayerView` neu geschrieben, `StageController`: `Update`, `BuildStage`, `Execute`, `ContentBuilder`: Clip- und Controller-Aufbau) |
+| Geänderte Baseline-Dateien (`.meta` in `Assets/Export`) | 2 |
+| Neue / geänderte Clips in `Assets/Content/Animations` | 4 neu (`idleUp`, `idleLeft`, `idleRight`, `walkRight`), 3 geändert |
+| Spieler-Animator | 4 → 8 Zustände, 1 Parameter (`walkSpeed`) |
+| EditMode-Tests | 94 → 102 (+8, alle grün) |
+
+Bildfolge der Geh-Animation nach der Behebung (60 Bilder/s, Schritt 0,14 s, 5 Schritte nach rechts, danach Stopp, Drehen nach oben, ein Schritt nach links):
+`walkRight` Sprites 14, 15, 14, 16, 14, 15, 14, 16 ... ohne Idle dazwischen und ohne Neustart je Schritt. Danach `idleRight` (14), `idleUp` (8), `walkLeft` (11, 12), `idleLeft` (11). Vorher: nur Sprite 14 oder 11 je Schritt, danach Idle.
 
 ## Offene Punkte aus Zeile 3 (für Metriken Folie 16)
 
