@@ -37,26 +37,77 @@ namespace CC.Game.Stage
         public string TypeId { get; set; }
     }
 
-    /// <summary>The player sprite. Walking animations exist for three directions, right mirrors left.</summary>
+    /// <summary>
+    /// The player sprite. Every facing has an idle pose and a walk cycle, so the facing that the Core
+    /// stores (it decides which pickup is collected) is always visible. Walking is one continuous loop:
+    /// it is not restarted per step and only changes to idle when the player really stops.
+    /// </summary>
     public sealed class PlayerView : EntityView
     {
-        public const string IdleState = "idle";
-        public const string WalkDownState = "walkDown";
-        public const string WalkLeftState = "walkLeft";
-        public const string WalkUpState = "walkUp";
+        private static readonly int WalkSpeedId = Animator.StringToHash("walkSpeed");
+        private int _currentState;
 
-        public void PlayWalk(Direction direction)
+        public Direction Facing { get; private set; } = Direction.Down;
+        public bool IsWalking { get; private set; }
+
+        public static string IdleStateName(Direction direction) => "idle" + Suffix(direction);
+        public static string WalkStateName(Direction direction) => "walk" + Suffix(direction);
+
+        private static string Suffix(Direction direction)
         {
-            Renderer.flipX = direction == Direction.Right;
             switch (direction)
             {
-                case Direction.Up: Animator.Play(WalkUpState); break;
-                case Direction.Down: Animator.Play(WalkDownState); break;
-                default: Animator.Play(WalkLeftState); break;
+                case Direction.Up: return "Up";
+                case Direction.Left: return "Left";
+                case Direction.Right: return "Right";
+                default: return "Down";
             }
         }
 
-        public void PlayIdle() => Animator.Play(IdleState);
+        /// <summary>
+        /// Sets the walk speed so one walk cycle spans the given number of steps. The walk clips are exactly
+        /// one second long, so the speed is the number of cycles per second.
+        /// </summary>
+        public void SetWalkCycle(float stepSeconds, float stepsPerCycle)
+        {
+            float cycleSeconds = stepSeconds * stepsPerCycle;
+            Animator.SetFloat(WalkSpeedId, cycleSeconds > 0.0001f ? 1f / cycleSeconds : 1f);
+        }
+
+        /// <summary>Stands still and looks in the given direction.</summary>
+        public void Face(Direction direction)
+        {
+            Facing = direction;
+            IsWalking = false;
+            Enter(IdleStateName(direction), 0f);
+        }
+
+        /// <summary>
+        /// Walks in the given direction. Keeps the running cycle: the same direction does nothing, a
+        /// different direction continues at the same phase so the feet do not jump.
+        /// </summary>
+        public void Walk(Direction direction)
+        {
+            float phase = IsWalking ? Mathf.Repeat(Animator.GetCurrentAnimatorStateInfo(0).normalizedTime, 1f) : 0f;
+            Facing = direction;
+            IsWalking = true;
+            Enter(WalkStateName(direction), phase);
+        }
+
+        /// <summary>Ends walking and shows the idle pose of the current facing. Does nothing when standing.</summary>
+        public void StopWalking()
+        {
+            if (IsWalking) Face(Facing);
+        }
+
+        private void Enter(string stateName, float normalizedTime)
+        {
+            int hash = Animator.StringToHash(stateName);
+            if (hash == _currentState) return;
+
+            _currentState = hash;
+            Animator.Play(hash, 0, normalizedTime);
+        }
     }
 
     public static class Motion

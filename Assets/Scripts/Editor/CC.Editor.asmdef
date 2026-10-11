@@ -3,7 +3,8 @@
     "rootNamespace": "CC.Editor",
     "references": [
         "CC.Core",
-        "CC.Data"
+        "CC.Data",
+        "Unity.2D.Sprite.Editor"
     ],
     "includePlatforms": [
         "Editor"

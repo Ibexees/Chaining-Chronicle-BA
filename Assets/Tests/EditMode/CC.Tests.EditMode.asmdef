@@ -4,6 +4,7 @@
     "references": [
         "CC.Core",
         "CC.Data",
+        "CC.Game",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

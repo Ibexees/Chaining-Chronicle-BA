@@ -19,12 +19,16 @@ namespace CC.Game.Stage
         private const int PickupSortingOrder = 5;
         private const int EnemySortingOrder = 10;
         private const int PlayerSortingOrder = 11;
+        // Idle only after this long without input, so a held key or quick taps keep the walk cycle running.
+        private const float IdleGraceSeconds = 0.06f;
 
         [SerializeField] private GameContent content;
         [SerializeField] private StageView view;
         [SerializeField] private PlayerController playerInput;
         [SerializeField] private StageCameraFollow cameraFollow;
         [SerializeField] private float stepSeconds = 0.14f;
+        [Tooltip("Steps one full walk cycle spans. 2 = one foot per step, 1 = the whole cycle in every step.")]
+        [SerializeField] private float stepsPerWalkCycle = 2f;
 
         private GameFlow _flow;
         private RunState _run;
@@ -35,6 +39,7 @@ namespace CC.Game.Stage
         private readonly Dictionary<int, PickupView> _pickupViews = new Dictionary<int, PickupView>();
         private Transform _entityRoot;
         private bool _busy;
+        private float _idleTimer;
 
         public StageSession Session => _session;
         public int StageNumber => _run?.StageNumber ?? 0;
@@ -58,7 +63,15 @@ namespace CC.Game.Stage
         private void Update()
         {
             if (_busy || _session == null || _flow.Current != GameFlowState.Exploring) return;
-            if (playerInput.TryGetIntent(out var intent)) StartCoroutine(Execute(intent));
+            if (playerInput.TryGetIntent(out var intent))
+            {
+                _idleTimer = 0f;
+                StartCoroutine(Execute(intent));
+                return;
+            }
+
+            _idleTimer += Time.deltaTime;
+            if (_idleTimer >= IdleGraceSeconds) _player.StopWalking();
         }
 
         /// <summary>Removes an enemy after combat (won or fled) and lets the player continue (A5, A6).</summary>
@@ -87,7 +100,8 @@ namespace CC.Game.Stage
 
             _player = EntityView.Create<PlayerView>("Player", _entityRoot, content.playerAnimator, PlayerSortingOrder);
             _player.SetCell(_session.PlayerPos);
-            _player.PlayIdle();
+            _player.SetWalkCycle(stepSeconds, stepsPerWalkCycle);
+            _player.Face(_session.Facing);
 
             foreach (var enemy in _session.Enemies)
             {
@@ -124,17 +138,17 @@ namespace CC.Game.Stage
             _busy = true;
 
             var result = intent.IsInteract ? _session.Interact() : _session.TryMove(intent.Direction);
-            _player.Renderer.flipX = result.Facing == CC.Core.Grid.Direction.Right;
 
             switch (result.Kind)
             {
                 case TurnKind.Moved:
-                    _player.PlayWalk(result.Facing);
+                    // Stays in the walk loop. Update returns to idle once no further step follows.
+                    _player.Walk(result.Facing);
                     yield return Animate(result, playerMoves: true);
-                    _player.PlayIdle();
                     break;
 
                 case TurnKind.PickedUp:
+                    _player.Face(result.Facing);
                     if (_pickupViews.TryGetValue(result.PickupId, out var pickupView))
                     {
                         Destroy(pickupView.gameObject);
@@ -150,12 +164,14 @@ namespace CC.Game.Stage
 
                 default:
                     // Turned, nothing to interact with: no time passes. Skip a frame so a held key does not spin.
+                    _player.Face(result.Facing);
                     yield return null;
                     break;
             }
 
             if (result.EnemyEngaged)
             {
+                _player.StopWalking();
                 playerInput.ClearBuffer();
                 _flow.GoTo(GameFlowState.Combat);
             }
