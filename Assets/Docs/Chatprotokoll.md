@@ -362,6 +362,8 @@ Die `.mcp.json` enthält einen Bearer-Token (`agd_pk_…`) im Klartext. Die Date
 
 Ich schlage vor: Die Ignore-Einträge oben übernehmen, den Rest wie in der Tabelle committen und dann pushen. Ein Commit bzw. Push mache ich erst nach deiner Freigabe. Passt das so, und wie hältst du es mit Frage 1 und 2?
 
+> **Korrekturhinweis (nachträglich, 11.10.2026):** Die Aussage im Abschnitt „Wichtigster Fund", die Historie enthalte keine Token und der Sonar-Token sei „nie im Repo" gewesen, war falsch. Der damalige Scan der Historie hat das Muster der Sonar-Tokens (`sqp_…`) nicht erkannt. Tatsächlich enthielt bereits der erste Commit (`d0a4249`) die Datei `measureSnapshot.ps1` mit zwei Sonar-Tokens. Die Datei wurde später gelöscht (`7b2e1c7`), ist aber in der Historie erhalten. Der MCP-Token (`agd_pk_…`) war nie in der Historie. Die Prüfung der neu hinzukommenden Dateien vor dem Push (siehe Prompt 7 und 8) war davon nicht betroffen. Folge: Die betroffenen Sonar-Tokens sind in SonarQube zu widerrufen.
+
 ---
 
 ## Prompt 7 (02.10.2026 17:51)
