@@ -34,6 +34,7 @@ Kontext: Bachelorarbeit. Chaining Chronicle wird nach dem GDD mit Claude Code ne
 ## Arbeitsweise (Pflicht wegen der Methodik der BA)
 
 - **Zeitlog führen:** Jede abgeschlossene Aufgabe bekommt eine Zeile in `Assets/Docs/Zeitlog.md` (Datum, Bereich, Prompt-Kurzfassung, KI-Zeit, Ergebnis, Notizen). Zeit per `date` messen.
+- **Token-Export:** Nach jedem Meilenstein `tools/Export-Tokenlog.ps1 -SkipLastPrompt` ausführen (PowerShell, im Projektroot). Es schreibt `Assets/Docs/Tokenlog.csv` und gibt die Summen aus. Die Zusammenfassung im Abschnitt "Token-Nutzung" des Zeitlogs danach aktualisieren.
 - **Annahmen dokumentieren:** Wenn das GDD oder ein Prompt etwas offen lässt, **keine stille Entscheidung**. Entweder nachfragen oder die Annahme im Architekturkonzept (Abschnitt 11) mit neuer Nummer festhalten (Material für UF4).
 - **Abweichungen** vom Architekturkonzept sofort im Konzept und im Zeitlog vermerken.
 - **Nicht über den Auftrag hinausgehen:** Nur das angefragte System bauen. GDD-TODOs (Finisher, Klassen, Meta-Progression) sind Erweiterungspunkte, keine Pflicht.

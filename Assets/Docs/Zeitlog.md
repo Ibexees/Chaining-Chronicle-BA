@@ -61,3 +61,24 @@ Beim ersten Kompilieren liefen alle 84 Core-Tests ohne Korrektur. Fehler traten 
 
 - Ist-Werte "Zeit" und "Änderungsauswirkung" der KI-Architektur werden erst nach der Umsetzung (Klassenanzahl, geänderte Dateien) belegbar.
 - Annahmen A1–A10 vom Autor bestätigen oder korrigieren. Korrekturen als Abweichungen in UF4 festhalten.
+
+## Token-Nutzung
+
+Export: `Assets/Docs/Tokenlog.csv`, erzeugt mit `tools/Export-Tokenlog.ps1 -SkipLastPrompt` aus dem Sitzungsprotokoll von Claude Code (Stand 02.10.2026, 18:2x, Prompts 1–8 von 8 abgeschlossenen). Der Export wird bei jedem Meilenstein wiederholt und überschreibt die Datei.
+
+| Prompt | Inhalt | Dauer | API-Aufrufe | Output-Tokens | Eingabe gesamt (verarbeitet) |
+|---|---|---|---|---|---|
+| 1 | Rahmenbedingungen, GDD und PPT lesen | 0,4 min | 3 | 2.247 | 151.211 |
+| 2 | Unity-MCP testen | 0,3 min | 4 | 936 | 264.527 |
+| 3 | Architekturkonzept | 1,8 min | 5 | 13.869 | 463.258 |
+| 4 | Fundament, CLAUDE.md, Entscheidungen A1–A10 | 5,4 min | 25 | 32.042 | 3.269.726 |
+| 5 | Stage System, Entscheidungen A11–A14 | 22,8 min | 76 | 164.568 | 22.247.717 |
+| 6–8 | .gitignore-Prüfung, Commits, Push | 3,3 min | 14 | 16.431 | 5.670.591 |
+| **Summe** | | **34,0 min** | **127** | **230.093** | **32.067.030** |
+
+Einordnung:
+- **Output** zählt alle erzeugten Tokens inklusive der internen Überlegungen des Modells (Thinking).
+- **Eingabe gesamt** ist die Summe über alle Modellaufrufe. Jeder Aufruf liest den gesamten Kontext erneut, 98,6 % davon aus dem Prompt-Cache (31,6 Mio gelesen, 0,45 Mio geschrieben, nur 254 Tokens ungecacht). Die Zahl misst verarbeitete Tokens, nicht den Umfang des Projekts. Der Kontext wuchs im Lauf der Sitzung, deshalb steigt die Eingabe je Aufruf (Prompt 5: im Mittel ca. 290.000 Tokens pro Aufruf).
+- **Dauer** reicht vom Prompt bis zur letzten Antwort und enthält die Laufzeit der Werkzeuge, aber nicht die Wartezeit auf den nächsten Prompt.
+- Das Stage System (Prompt 5) allein macht 72 % der Output-Tokens und 60 % der Aufrufe aus.
+- Der Export enthält nur diese Sitzung. Wird eine neue Sitzung gestartet, muss `-Transcript` auf die neue Datei zeigen (Standard ist die neueste).
