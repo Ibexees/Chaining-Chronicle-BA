@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CC.Core.Grid;
 using CC.Core.Util;
 
@@ -107,6 +108,27 @@ namespace CC.Core.Stage
             return new TurnResult(
                 TurnKind.PickedUp, PlayerPos, PlayerPos, Facing,
                 pickup.Kind, pickup.Id, moves, EngagedEnemyId);
+        }
+
+        /// <summary>
+        /// The enemies that take part in a combat (A36): the engaged enemy first, then every other enemy within
+        /// <paramref name="joinRadius"/> walking steps of the player, nearest first (ties by id), at most
+        /// <paramref name="maxEnemies"/> in total. Distances follow the corridors, so an enemy behind a wall
+        /// does not join. Empty if the engaged enemy does not exist.
+        /// </summary>
+        public IReadOnlyList<StageEnemy> CombatParticipants(int engagedEnemyId, int joinRadius, int maxEnemies)
+        {
+            var engaged = EnemyById(engagedEnemyId);
+            if (engaged == null || maxEnemies < 1) return new List<StageEnemy>();
+
+            var distances = new DistanceMap(Grid, PlayerPos, maxSteps: Math.Max(joinRadius, 0));
+            var joining = _enemies
+                .Where(e => e != engaged && distances.IsReachable(e.Pos))
+                .OrderBy(e => distances[e.Pos])
+                .ThenBy(e => e.Id)
+                .Take(maxEnemies - 1);
+
+            return new[] { engaged }.Concat(joining).ToList();
         }
 
         /// <summary>Removes a defeated or escaped-from enemy and ends the engagement (A5, A6).</summary>

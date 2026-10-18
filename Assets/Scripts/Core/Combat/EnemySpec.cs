@@ -46,12 +46,14 @@ namespace CC.Core.Combat
 
         public int XpReward(int level) => BaseXp * Math.Max(level, 1);
 
-        public Combatant CreateCombatant(int combatantId, int level, IRng rng)
+        /// <param name="label">Tells enemies of the same type apart ("A", "B"), or null.</param>
+        public Combatant CreateCombatant(int combatantId, int level, IRng rng, string label = null)
         {
             IEnemyBrain brain = Ai == EnemyAi.Random
                 ? new RandomEnemyBrain(rng)
                 : (IEnemyBrain)new FsmEnemyBrain();
-            return new Combatant(combatantId, Name, Team.Enemy, level, StatsAt(level), _skills, Id, brain);
+            string name = string.IsNullOrEmpty(label) ? Name : Name + " " + label;
+            return new Combatant(combatantId, name, Team.Enemy, level, StatsAt(level), _skills, Id, brain);
         }
     }
 }

@@ -19,6 +19,8 @@ Zweck: Nachweis für UF1 (Effizienz) und UF3 (Architekturmetriken), Anforderung 
 
 | 9 | 11.10.2026 | Gameplay-Systeme | **Combat System** (Kern, Kette, Gegner-KI, Party, XP, Power-up-Wirkung, Inhalte, Kampfansicht) inkl. Dokumentation | "Starte jetzt mit dem Combat System" | ca. 21 min (13:25–13:46) inkl. Diagnose und Dokumentation | offen | Funktionsfähig: Kampf mit Kette, Flucht, Sieg mit XP und Levelaufstieg, Niederlage → GameOver → Hub, Pickups wirken. 170 EditMode-Tests grün (+68), im Play Mode über echte Eingabe-Events geprüft | 13 neue Annahmen A25–A37 ungeprüft. Kampfmenü nur über Zustand geprüft, nicht als Bild (B9). `TempCombatStub` gelöscht |
 
+| 10 | 18.10.2026 | Gameplay-Systeme | **Combat System: Gegner treten dem Kampf bei** (A36 neu), Zielauswahl, mehrere Gegner im Kampfbild | "Ermögliche, dass zusätzlich zum Gegner auf der Ebene andere Gegner dem Kampf beitreten und bekämpft werden können" | ca. 5 min (15:24–15:29) inkl. Dokumentation | Review Autor: Kampfmenü und A25–A35, A37 bestätigt | `StageSession.CombatParticipants`, mehrere Gegner im `CombatController`, 186 EditMode-Tests grün (+16). Im Play Mode geprüft: 3 Gegner im Radius treten bei, der weit entfernte nicht, Zielauswahl, Sieg mit Summen-XP, alle Beigetretenen verschwinden | A36 war eine stille Vereinfachung der KI und wurde vom Autor verworfen (1 von 13 Combat-Annahmen, UF4). Neue Fassung A36 ungeprüft. Ein Held allein verliert gegen 3 Gegner schon auf Stage 1 (Balancing, A25) |
+
 n. g. = nicht gemessen.
 
 ## Kennzahlen Fundament (für Folie 16)

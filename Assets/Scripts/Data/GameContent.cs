@@ -37,6 +37,10 @@ namespace CC.Data
         public bool sameSkillOncePerCharacter;
         [Tooltip("Chance that fleeing works. 1 = always (A11).")]
         [Range(0f, 1f)] public float fleeChance = 1f;
+        [Tooltip("Other enemies on the stage join a fight when they are this many walking steps from the player (A36).")]
+        [Min(0)] public int joinRadius = 5;
+        [Tooltip("Most enemies in one fight, the engaged one included (A36).")]
+        [Min(1)] public int maxEnemiesInCombat = 4;
 
         private Dictionary<string, EnemySpec> _enemySpecs;
         private List<PartyMemberSpec> _recruitSpecs;

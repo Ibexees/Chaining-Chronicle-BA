@@ -94,6 +94,14 @@ namespace CC.Tests.Content
         }
 
         [Test]
+        public void OtherEnemiesCanJoinAFight()
+        {
+            // A36: the radius is larger than zero (otherwise nobody joins) and there is room for several enemies.
+            Assert.Greater(_content.joinRadius, 0);
+            Assert.GreaterOrEqual(_content.maxEnemiesInCombat, 2);
+        }
+
+        [Test]
         public void ChainLimitMatchesTheDecision()
         {
             var config = _content.CreateChainConfig();

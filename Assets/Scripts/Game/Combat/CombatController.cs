@@ -59,9 +59,15 @@ namespace CC.Game.Combat
         private Mode _mode = Mode.Idle;
 
         private CombatSession _session;
-        private EnemySpec _enemySpec;
-        private Combatant _enemy;
-        private int _stageEnemyId = -1;
+        /// <summary>An enemy in the fight: its combatant, its design copy and the enemy it is on the stage.</summary>
+        private sealed class Foe
+        {
+            public Combatant Combatant;
+            public EnemySpec Spec;
+            public int StageEnemyId;
+        }
+
+        private readonly List<Foe> _foes = new List<Foe>();
         private int _pendingEnemyId = -1;
 
         private Transform _root;
@@ -130,20 +136,47 @@ namespace CC.Game.Combat
 
         private void BeginCombat(int stageEnemyId)
         {
-            _stageEnemyId = stageEnemyId;
             var run = stage.Run;
             var content = stage.Content;
-            var stageEnemy = stage.Session.EnemyById(stageEnemyId);
 
             var party = new List<Combatant>();
             for (int i = 0; i < run.Party.Members.Count; i++)
                 party.Add(Combatant.ForMember(i + 1, run.Party.Members[i]));
 
             var rng = new SeededRng(run.Seed).Derive(3000 + run.StageNumber * 100 + stageEnemyId);
-            _enemySpec = content.EnemySpecFor(stageEnemy.TypeId);
-            _enemy = _enemySpec.CreateCombatant(100, stageEnemy.Level, rng.Derive(1));
 
-            _session = new CombatSession(party, new[] { _enemy }, rng,
+            // The engaged enemy plus the ones close enough to join (A36). Several of one type get letters.
+            var participants = stage.Session.CombatParticipants(stageEnemyId, content.joinRadius, content.maxEnemiesInCombat);
+            if (participants.Count == 0)
+            {
+                Debug.LogError($"Combat started for enemy {stageEnemyId}, which is not on the stage.");
+                _flow.GoTo(GameFlowState.Exploring);
+                return;
+            }
+
+            _foes.Clear();
+            var ofType = participants.GroupBy(e => e.TypeId).ToDictionary(g => g.Key, g => g.Count());
+            var letters = new Dictionary<string, int>();
+            for (int i = 0; i < participants.Count; i++)
+            {
+                var stageEnemy = participants[i];
+                var spec = content.EnemySpecFor(stageEnemy.TypeId);
+                string label = null;
+                if (ofType[stageEnemy.TypeId] > 1)
+                {
+                    letters.TryGetValue(stageEnemy.TypeId, out int used);
+                    letters[stageEnemy.TypeId] = used + 1;
+                    label = ((char)('A' + used)).ToString();
+                }
+                _foes.Add(new Foe
+                {
+                    Combatant = spec.CreateCombatant(100 + i, stageEnemy.Level, rng.Derive(1 + i), label),
+                    Spec = spec,
+                    StageEnemyId = stageEnemy.Id
+                });
+            }
+
+            _session = new CombatSession(party, _foes.Select(f => f.Combatant), rng,
                 new ChainResolver(content.CreateChainConfig()), content.fleeChance);
 
             _log.Clear();
@@ -154,7 +187,7 @@ namespace CC.Game.Combat
             _active = null;
             BuildActors(content);
 
-            foreach (var c in party.Concat(new[] { _enemy })) _shownHp[c] = c.Hp;
+            foreach (var c in party.Concat(_foes.Select(f => f.Combatant))) _shownHp[c] = c.Hp;
 
             var events = _session.Start();
             StartCoroutine(Play(events));
@@ -316,8 +349,11 @@ namespace CC.Game.Combat
             {
                 case CombatOutcome.Won:
                     _resultTitle = "VICTORY";
-                    int xp = _enemySpec.XpReward(_enemy.Level);
-                    _resultLines.Add($"{_enemy.Name} (level {_enemy.Level}) defeated. +{xp} XP for everyone still standing.");
+                    int xp = _foes.Sum(f => f.Spec.XpReward(f.Combatant.Level));
+                    _resultLines.Add(_foes.Count == 1
+                        ? $"{_foes[0].Combatant.Name} (level {_foes[0].Combatant.Level}) defeated."
+                        : $"{_foes.Count} enemies defeated.");
+                    _resultLines.Add($"+{xp} XP for everyone still standing.");
                     foreach (var member in stage.Run.Party.Members.Where(m => m.Hp > 0))
                     {
                         foreach (int level in member.GainXp(xp))
@@ -327,7 +363,9 @@ namespace CC.Game.Combat
 
                 case CombatOutcome.Fled:
                     _resultTitle = "ESCAPED";
-                    _resultLines.Add($"The party got away from {_enemy.Name}.");
+                    _resultLines.Add(_foes.Count == 1
+                        ? $"The party got away from {_foes[0].Combatant.Name}."
+                        : $"The party got away from {_foes.Count} enemies.");
                     break;
 
                 default:
@@ -405,7 +443,7 @@ namespace CC.Game.Combat
             var targets = _session.ValidTargets(actor, skill).ToList();
             if (targets.Count == 0) return;
 
-            if (targets.Count == 1 || skill.Target == SkillTarget.Enemy)
+            if (targets.Count == 1)
             {
                 Submit(skill, targets[0]);
                 return;
@@ -429,8 +467,9 @@ namespace CC.Game.Combat
                 return;
             }
 
-            stage.ResolveEngagement(_stageEnemyId);
-            _stageEnemyId = -1;
+            // Won: all of them are defeated. Fled: they all lose the party (A36). Either way they leave the stage.
+            foreach (var foe in _foes) stage.ResolveEngagement(foe.StageEnemyId);
+            _foes.Clear();
             _mode = Mode.Idle;
             Teardown();
             _flow.GoTo(GameFlowState.Exploring);
@@ -476,13 +515,23 @@ namespace CC.Game.Combat
                 if (combatant.Hp <= 0) SetAlpha(combatant, 0.25f);
             }
 
-            var enemyDef = content.BiomeFor(stage.StageNumber).FindEnemy(_enemy.TypeId);
-            var enemyView = EntityView.Create<EnemyView>(_enemy.Name, _root,
-                enemyDef != null ? enemyDef.animator : null, ActorOrder);
-            enemyView.transform.localScale = Vector3.one * 3f;
-            var enemyHome = _root.position + new Vector3(width * 0.26f, 0.2f, 0f);
-            enemyView.transform.position = enemyHome;
-            _actors[_enemy] = new Actor { View = enemyView, Home = enemyHome };
+            // Enemies stand in a column on the right, smaller the more of them there are.
+            int count = _foes.Count;
+            float scale = count <= 1 ? 3f : count == 2 ? 2.6f : 2.2f;
+            float spacing = count <= 1 ? 0f : Mathf.Min(1.9f, (height - 3f) / (count - 1));
+            for (int i = 0; i < count; i++)
+            {
+                var combatant = _foes[i].Combatant;
+                var enemyDef = content.BiomeFor(stage.StageNumber).FindEnemy(combatant.TypeId);
+                var enemyView = EntityView.Create<EnemyView>(combatant.Name, _root,
+                    enemyDef != null ? enemyDef.animator : null, ActorOrder);
+                enemyView.transform.localScale = Vector3.one * scale;
+                float y = (count - 1) * 0.5f * spacing - i * spacing;
+                // Zigzag a little so overlapping sprites stay readable.
+                var enemyHome = _root.position + new Vector3(width * 0.26f + (i % 2 == 1 ? 0.8f : 0f), y + 0.2f, 0f);
+                enemyView.transform.position = enemyHome;
+                _actors[combatant] = new Actor { View = enemyView, Home = enemyHome };
+            }
         }
 
         private Sprite WhiteSprite()
@@ -536,14 +585,19 @@ namespace CC.Game.Combat
             float w = Screen.width / s;
             const float h = 720f;
 
-            // Enemy panel, top right
-            DrawCombatant(new Rect(w - 360f, 24f, 336f, 74f), _enemy, false);
+            // Enemy panels, top right
+            float ey = 24f;
+            foreach (var foe in _session.Enemies)
+            {
+                DrawCombatant(new Rect(w - 360f, ey, 336f, 74f), foe, Highlighted(foe));
+                ey += 82f;
+            }
 
-            // Party panel, left
+            // Party panels, left
             float y = 24f;
             foreach (var member in _session.Party)
             {
-                DrawCombatant(new Rect(24f, y, 336f, 74f), member, member == _active && _mode != Mode.Result);
+                DrawCombatant(new Rect(24f, y, 336f, 74f), member, Highlighted(member));
                 y += 82f;
             }
 
@@ -565,6 +619,11 @@ namespace CC.Game.Combat
             DrawFloating();
             GUI.matrix = Matrix4x4.identity;
         }
+
+        /// <summary>Whose turn it is, or who is picked as the target right now.</summary>
+        private bool Highlighted(Combatant c) =>
+            (c == _active && _mode != Mode.Result) ||
+            (_mode == Mode.Target && _targets.Count > 0 && _targets[_targetIndex] == c);
 
         private void DrawCombatant(Rect r, Combatant c, bool active)
         {

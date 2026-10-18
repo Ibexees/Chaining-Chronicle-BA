@@ -199,6 +199,8 @@ namespace CC.Editor
             content.chainMax = 5;
             content.sameSkillOncePerCharacter = false;
             content.fleeChance = 1f;
+            content.joinRadius = 5;
+            content.maxEnemiesInCombat = 4;
             EditorUtility.SetDirty(content);
 
             AssetDatabase.SaveAssets();

@@ -5,7 +5,7 @@
 | Basis | `GDD_Chaining_Chronicle` v1.0 (06.03.2026) |
 | Engine | Unity 6000.3.8f1, URP 2D, Input System 1.18, 2D Tilemap, Test Framework 1.6 |
 | Erstellt von | Claude Code (Sonnet 5.5), Prompt: "Architekturkonzept basierend auf dem GDD" |
-| Stand | 11.10.2026, Version 0.6 (Combat System umgesetzt: A25–A37 neu und ungeprüft, D8–D13, B9–B11) |
+| Stand | 18.10.2026, Version 0.7 (Combat System: A25–A35 und A37 bestätigt, A36 verworfen und neu gefasst, D8–D14, B9–B11) |
 | Zweck | Methodik-Schritt "Architektur vor Umsetzung" (Folie 15), Grundlage für UF3 |
 
 Das Dokument beschreibt Ziele, Struktur, Verantwortlichkeiten und Reihenfolge. Es enthält bewusst keinen Implementierungscode. Alle Stellen, an denen das GDD nichts oder Mehrdeutiges sagt, sind in Abschnitt 11 als **Annahmen** gelistet (Material für UF4).
@@ -332,7 +332,7 @@ Neue Annahmen der KI bei der Fehlerbehebung am Stage System (11.10.2026). **Beid
 | A23 | 2.2.3 "facing the object", Baseline-Grafiken | Die Baseline hat nur eine Idle-Animation (nach unten). Wie sieht der stehende Spieler in die anderen Richtungen aus? | Nach unten bleibt die vorhandene animierte Idle-Animation. Nach oben, links und rechts steht der Spieler in der neutralen Pose (erstes Bild) des jeweiligen Geh-Clips, als stehendes Einzelbild. Rechts nutzt den vorhandenen `walkRight`-Clip, es wird nicht mehr gespiegelt. Neue Grafiken wurden nicht erzeugt |
 | A24 | 2.2.2 Rundenmodell, Geh-Animation | Wie lange dauert ein Geh-Zyklus im Verhältnis zum Schritt (0,14 s)? Wann geht der Spieler in Idle? | Ein Zyklus (Bein links, Mitte, Bein rechts, Mitte) umfasst zwei Schritte, also ein Fuß je Schritt (`stepsPerWalkCycle` = 2, einstellbar). Der Zyklus läuft über aufeinanderfolgende Schritte durch und wird nicht pro Schritt neu gestartet. Idle erst nach 0,06 s ohne weitere Eingabe |
 
-Neue Annahmen der KI beim Combat System (Meilenstein 14.11., umgesetzt am 11.10.2026), **noch nicht** vom Autor geprüft. Alle Zahlenwerte sind Platzhalter ohne GDD-Grundlage und werden in der Finalisierung balanciert:
+Neue Annahmen der KI beim Combat System (Meilenstein 14.11., umgesetzt am 11.10.2026). Der Autor hat sie am 18.10.2026 geprüft: **A25–A35 und A37 bestätigt, A36 verworfen** (neue Fassung unten, noch nicht geprüft). Alle Zahlenwerte sind Platzhalter ohne GDD-Grundlage und werden in der Finalisierung balanciert:
 
 | Nr | GDD-Stelle | Mehrdeutigkeit | Annahme der KI |
 |---|---|---|---|
@@ -347,7 +347,7 @@ Neue Annahmen der KI beim Combat System (Meilenstein 14.11., umgesetzt am 11.10.
 | A33 | A7 | Auf welchem Level kommt ein Rekrut? | Auf dem durchschnittlichen Level der Party (abgerundet, mindestens 1), mit der bisherigen Rüstung |
 | A34 | 2.1 Permadeath | Was passiert mit gefallenen Partymitgliedern? | Sie bleiben für den Rest des Runs kampfunfähig (kein Wiederbeleben). Der Run endet, wenn alle gefallen sind |
 | A35 | A3, A12, 1.1 | Was zählt die Kettenobergrenze (5)? Wer darf einsteigen? | Die Zahl der Aktionen der Kette **einschließlich** der auslösenden, also höchstens 5. Einsteigen darf der schnellste Lebende der handelnden Seite mit passendem Skill, auch der Auslöser selbst und derselbe Charakter mehrmals. Follow-ups sind Schadensskills gegen dasselbe Ziel. Die Zusatzregel "gleicher Skill nur einmal je Charakter" ist umgesetzt, aber standardmäßig aus |
-| A36 | 2.2.1 | Wie viele Gegner kämpfen? | Nur der Gegner, mit dem der Spieler kollidiert ist, gegen die ganze Party. Weitere Gegner der Stage schließen sich nicht an |
+| A36 | 2.2.1 | Wie viele Gegner kämpfen? | **Verworfen:** Ursprünglich kämpfte nur der kollidierte Gegner (eine Vereinfachung der KI, ohne Rückfrage). **Neu gefasst:** Der Gegner, mit dem der Spieler kollidiert ist, plus alle anderen Gegner der Stage, die höchstens `joinRadius` (5) Laufschritte vom Spieler entfernt sind, nächste zuerst, höchstens `maxEnemiesInCombat` (4) insgesamt. Die Entfernung folgt den Gängen, ein Gegner hinter einer Wand tritt nicht bei. Alle treten zu Beginn bei (kein Nachrücken während des Kampfes). Sieg: alle besiegt. Flucht: alle Beigetretenen verlieren die Party und verschwinden von der Stage (A6). Die XP-Belohnung ist die Summe aller. Mehrere Gegner desselben Typs bekommen Buchstaben (Mouse A, Mouse B). Der Spieler wählt das Ziel, wenn mehrere leben. Die Obergrenze der Kette gilt unverändert je Kette und trifft immer das Ziel, auf dem sie begonnen hat |
 | A37 | 2.2.5 | Schadensformel | Schaden = Skill-Power + Angriff des Nutzers − Verteidigung des Ziels, mindestens 1. Heilung = Power + Angriff/2, begrenzt auf die Max-LP. Kein Zufall, keine Fehlschläge |
 
 ---
@@ -384,6 +384,7 @@ Stand Combat System. Jeder Punkt ist ein Material für UF2 (Limitationen) oder U
 | D11 | `CombatView` als eigene Ansicht, `ChainCounterView` (5.3, 5.4) | Eine Klasse `CombatController` (IMGUI plus Sprites im Kamerabild). Der Kettenzähler ist Teil davon, keine eigene View. `TempCombatStub` ist gelöscht | Meilenstein verlangt "rudimentär", das HUD kommt im UI-Meilenstein (13.3) |
 | D12 | `CombatSession` kennt Phase `Resolving` (5.3) | Die Session ist synchron. `Resolving` und `NotStarted` existieren nur als Zustand während eines Aufrufs. Statt Phasen-Ereignissen liefert jeder Aufruf eine Liste von `CombatEvent`, die die View abspielt | Einfacher zu testen als Callbacks, und die Animation bleibt aus dem Core |
 | D13 | Core-Typen werden nie von Assets referenziert (6) | Zusätzlich `PartyMemberSpec`, `EnemySpec` als Core-Kopien von `PartyMemberDef` und `EnemyDef` sowie `IPartyCatalog`, das `GameContent` implementiert | Die Konverter-Regel aus 6, angewendet auf die neuen Definitionen |
+| D14 | `StageSession` bleibt unverändert, Kampf mit einem Gegner | `StageSession.CombatParticipants` ergänzt (Core, getestet), bestimmt die beitretenden Gegner. `CombatController` führt eine Liste von Gegnern und eine Zielauswahl. `CombatSession` unterstützte mehrere Gegner schon | A36 vom Autor verworfen. Nachträgliche Änderung eines fertigen Systems, die Änderung blieb auf eine Methode, den Controller und `GameContent` begrenzt |
 
 ### 13.2 Befunde
 

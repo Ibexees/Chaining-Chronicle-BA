@@ -40,3 +40,5 @@ MonoBehaviour:
   chainMax: 5
   sameSkillOncePerCharacter: 0
   fleeChance: 1
+  joinRadius: 5
+  maxEnemiesInCombat: 4
