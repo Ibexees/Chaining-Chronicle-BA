@@ -16,3 +16,16 @@ MonoBehaviour:
   displayName: Evil Eye
   animator: {fileID: 9100000, guid: f6b3916084f7ee044bbe67c78f1e30ea, type: 2}
   firstStage: 3
+  maxHp: 18
+  attack: 5
+  defense: 0
+  speed: 8
+  hpPerLevel: 4
+  attackPerLevel: 1
+  defensePerLevel: 0
+  speedPerLevel: 0
+  skills:
+  - {fileID: 11400000, guid: a77d168cc2fb62b4fa4c4bf2e31514f2, type: 2}
+  - {fileID: 11400000, guid: 7d5e74e7d3bafce45a9cf9067094e807, type: 2}
+  ai: 0
+  baseXp: 12

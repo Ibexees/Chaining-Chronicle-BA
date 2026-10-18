@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e5385e4bd10da54f9d3a89e31f86d3f, type: 3}
+  m_Name: slam
+  m_EditorClassIdentifier: CC.Data::CC.Data.SkillDef
+  id: slam
+  displayName: Slam
+  power: 5
+  target: 0
+  kind: 0
+  appliesStatus: {fileID: 11400000, guid: 4d4af1bc4456dd446adc5a87fc5607d9, type: 2}
+  statusTurns: 3
+  followUpOn: {fileID: 0}

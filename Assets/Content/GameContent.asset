@@ -19,3 +19,24 @@ MonoBehaviour:
   stagesPerBiome: 3
   playerAnimator: {fileID: 9100000, guid: bd71cbddd8689cf4798436a5bc21901c, type: 2}
   pickupAnimator: {fileID: 9100000, guid: 6ae88990a1bd10c4ca19fafe8bc9601c, type: 2}
+  hero: {fileID: 11400000, guid: 2225924d8ff07e24990d76ca32795b78, type: 2}
+  recruits:
+  - {fileID: 11400000, guid: a816e0df0669b7f4b9a0906c9dd94fbc, type: 2}
+  - {fileID: 11400000, guid: b67d336566c27a041ba01a7b61b23d54, type: 2}
+  - {fileID: 11400000, guid: ad993ac17db609a46b8ff6423a5dae99, type: 2}
+  chainSkills:
+  - {fileID: 11400000, guid: 318bb6ff641aa61439f7166b6a43ee2c, type: 2}
+  - {fileID: 11400000, guid: a5e25b784e063ef4c914b1171f0175d2, type: 2}
+  - {fileID: 11400000, guid: e06408a01590247429538813ee247f37, type: 2}
+  namePool:
+  - Mira
+  - Tobin
+  - Elsa
+  - Garrick
+  - Nyx
+  - Bram
+  - Lena
+  - Odo
+  chainMax: 5
+  sameSkillOncePerCharacter: 0
+  fleeChance: 1

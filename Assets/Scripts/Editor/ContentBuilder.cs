@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CC.Core.Combat;
 using CC.Data;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -53,17 +54,56 @@ namespace CC.Editor
         {
             public string Id, DisplayName, Clip;
             public int FirstStage;
+            // Level 1 values. Placeholders without GDD basis (A25), balancing comes in the final milestone.
+            public int Hp, Attack, Defense, Speed, BaseXp;
+            public EnemyAi Ai = EnemyAi.Fsm;
+            public string[] Skills;
         }
 
         private static readonly EnemyEntry[] Enemies =
         {
-            new EnemyEntry { Id = "mouse",        DisplayName = "Mouse",         Clip = "Enemies/mouse/mouse.anim",                FirstStage = 1 },
-            new EnemyEntry { Id = "hooddude",     DisplayName = "Hood Dude",     Clip = "Enemies/HoodDude/HoodDude.anim",          FirstStage = 2 },
-            new EnemyEntry { Id = "evileye",      DisplayName = "Evil Eye",      Clip = "Enemies/evilEye/evilEye.anim",            FirstStage = 3 },
-            new EnemyEntry { Id = "walrus",       DisplayName = "Walrus",        Clip = "Enemies/walrus/walrus.anim",              FirstStage = 4 },
-            new EnemyEntry { Id = "livingarmour", DisplayName = "Living Armour", Clip = "Enemies/LivingArmour/LivingAmour.anim",   FirstStage = 5 },
-            new EnemyEntry { Id = "magmaegg",     DisplayName = "Magma Egg",     Clip = "Enemies/magmaegg/magmaegg.anim",          FirstStage = 7 },
+            new EnemyEntry { Id = "mouse",        DisplayName = "Mouse",         Clip = "Enemies/mouse/mouse.anim",              FirstStage = 1,
+                             Hp = 14, Attack = 3, Defense = 0, Speed = 12, BaseXp = 8,  Ai = EnemyAi.Random, Skills = new[] { "bite" } },
+            new EnemyEntry { Id = "hooddude",     DisplayName = "Hood Dude",     Clip = "Enemies/HoodDude/HoodDude.anim",        FirstStage = 2,
+                             Hp = 20, Attack = 4, Defense = 1, Speed = 9,  BaseXp = 10, Skills = new[] { "stab", "mend" } },
+            new EnemyEntry { Id = "evileye",      DisplayName = "Evil Eye",      Clip = "Enemies/evilEye/evilEye.anim",          FirstStage = 3,
+                             Hp = 18, Attack = 5, Defense = 0, Speed = 8,  BaseXp = 12, Skills = new[] { "gaze", "burst" } },
+            new EnemyEntry { Id = "walrus",       DisplayName = "Walrus",        Clip = "Enemies/walrus/walrus.anim",            FirstStage = 4,
+                             Hp = 38, Attack = 5, Defense = 3, Speed = 5,  BaseXp = 14, Skills = new[] { "tusk" } },
+            new EnemyEntry { Id = "livingarmour", DisplayName = "Living Armour", Clip = "Enemies/LivingArmour/LivingAmour.anim", FirstStage = 5,
+                             Hp = 34, Attack = 6, Defense = 5, Speed = 4,  BaseXp = 14, Skills = new[] { "slam" } },
+            new EnemyEntry { Id = "magmaegg",     DisplayName = "Magma Egg",     Clip = "Enemies/magmaegg/magmaegg.anim",        FirstStage = 7,
+                             Hp = 28, Attack = 8, Defense = 2, Speed = 7,  BaseXp = 16, Skills = new[] { "scorch", "mend" } },
         };
+
+        private static readonly (string id, string name, Color color)[] StatusTable =
+        {
+            ("bleed", "Bleeding", new Color(0.85f, 0.2f, 0.2f)),
+            ("burn", "Burning", new Color(0.95f, 0.55f, 0.1f)),
+            ("shaken", "Shaken", new Color(0.8f, 0.75f, 0.3f)),
+        };
+
+        // id, name, power, target, kind, applies, followUpOn. The three chain skills close a cycle
+        // (bleed -> burn -> shaken -> bleed), the upper limit of the chain is what stops it.
+        private static readonly (string id, string name, int power, SkillTarget target, SkillKind kind, string applies, string followUp)[] SkillTable =
+        {
+            ("slash",        "Slash",        4, SkillTarget.Enemy, SkillKind.Damage, "bleed",  null),
+            ("mend",         "Mend",         6, SkillTarget.Ally,  SkillKind.Heal,   null,     null),
+            ("flame_pillar", "Flame Pillar", 6, SkillTarget.Enemy, SkillKind.Damage, "burn",   "bleed"),
+            ("fissure",      "Fissure",      5, SkillTarget.Enemy, SkillKind.Damage, "shaken", "burn"),
+            ("rend",         "Rend",         4, SkillTarget.Enemy, SkillKind.Damage, "bleed",  "shaken"),
+            ("bite",         "Bite",         2, SkillTarget.Enemy, SkillKind.Damage, "bleed",  null),
+            ("stab",         "Stab",         3, SkillTarget.Enemy, SkillKind.Damage, "bleed",  null),
+            ("gaze",         "Gaze",         2, SkillTarget.Enemy, SkillKind.Damage, "shaken", null),
+            ("burst",        "Burst",        4, SkillTarget.Enemy, SkillKind.Damage, "burn",   "shaken"),
+            ("tusk",         "Tusk",         4, SkillTarget.Enemy, SkillKind.Damage, null,     null),
+            ("slam",         "Slam",         5, SkillTarget.Enemy, SkillKind.Damage, "shaken", null),
+            ("scorch",       "Scorch",       5, SkillTarget.Enemy, SkillKind.Damage, "burn",   null),
+        };
+
+        private static readonly string[] ChainSkillIds = { "flame_pillar", "fissure", "rend" };
+
+        private static readonly string[] NamePool = { "Mira", "Tobin", "Elsa", "Garrick", "Nyx", "Bram", "Lena", "Odo" };
 
         // Indices into Tiles-Sheet.png (sliced 32x32). Floor: plain tile first, decoration after.
         private const string TileSheet = Export + "/Tiles/Tiles-Sheet.png";
@@ -79,6 +119,10 @@ namespace CC.Editor
             _spritesById = null;
             EnsureFolder(ContentRoot + "/Enemies");
             EnsureFolder(ContentRoot + "/Biomes");
+            EnsureFolder(ContentRoot + "/Combat");
+            EnsureFolder(ContentRoot + "/Combat/Statuses");
+            EnsureFolder(ContentRoot + "/Combat/Skills");
+            EnsureFolder(ContentRoot + "/Party");
 
             // The baseline only has an idle animation facing down. For the other facings the neutral frame of
             // the matching walk clip is used as a standing pose, so the stored facing is always visible.
@@ -95,6 +139,9 @@ namespace CC.Editor
             var pickupController = EnsureController(ContentRoot + "/Animators/Pickup.controller",
                 new StateSpec("bounce", Export + "/PowerUp/BounciingExclemationMark.anim"));
 
+            var statuses = BuildStatuses();
+            var skills = BuildSkills(statuses);
+
             var enemyDefs = new Dictionary<string, EnemyDef>();
             foreach (var entry in Enemies)
             {
@@ -104,6 +151,17 @@ namespace CC.Editor
                 def.displayName = entry.DisplayName;
                 def.animator = controller;
                 def.firstStage = entry.FirstStage;
+                def.maxHp = entry.Hp;
+                def.attack = entry.Attack;
+                def.defense = entry.Defense;
+                def.speed = entry.Speed;
+                def.hpPerLevel = 4;
+                def.attackPerLevel = 1;
+                def.defensePerLevel = 0;
+                def.speedPerLevel = 0;
+                def.baseXp = entry.BaseXp;
+                def.ai = entry.Ai;
+                def.skills = entry.Skills.Select(s => skills[s]).ToArray();
                 EditorUtility.SetDirty(def);
                 enemyDefs[entry.Id] = def;
             }
@@ -124,11 +182,84 @@ namespace CC.Editor
             content.stagesPerBiome = 3;
             content.playerAnimator = playerController;
             content.pickupAnimator = pickupController;
+
+            content.hero = Member("hero", "Hero", playerController, Color.white,
+                maxHp: 30, attack: 5, defense: 2, speed: 10, skills: new[] { skills["slash"], skills["mend"] });
+            content.recruits = new[]
+            {
+                Member("wanderer", "Wanderer", playerController, new Color(0.75f, 1f, 0.75f),
+                    maxHp: 26, attack: 6, defense: 1, speed: 11, skills: new[] { skills["flame_pillar"] }),
+                Member("mystic", "Mystic", playerController, new Color(0.75f, 0.8f, 1f),
+                    maxHp: 22, attack: 4, defense: 1, speed: 9, skills: new[] { skills["fissure"], skills["mend"] }),
+                Member("brawler", "Brawler", playerController, new Color(1f, 0.8f, 0.7f),
+                    maxHp: 34, attack: 7, defense: 3, speed: 7, skills: new[] { skills["rend"] }),
+            };
+            content.chainSkills = ChainSkillIds.Select(i => skills[i]).ToArray();
+            content.namePool = NamePool;
+            content.chainMax = 5;
+            content.sameSkillOncePerCharacter = false;
+            content.fleeChance = 1f;
             EditorUtility.SetDirty(content);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("Chaining Chronicle content built: " + ContentRoot);
+        }
+
+        private static Dictionary<string, StatusDef> BuildStatuses()
+        {
+            var result = new Dictionary<string, StatusDef>();
+            foreach (var (id, name, color) in StatusTable)
+            {
+                var def = LoadOrCreate<StatusDef>($"{ContentRoot}/Combat/Statuses/{id}.asset");
+                def.id = id;
+                def.displayName = name;
+                def.color = color;
+                EditorUtility.SetDirty(def);
+                result[id] = def;
+            }
+            return result;
+        }
+
+        private static Dictionary<string, SkillDef> BuildSkills(Dictionary<string, StatusDef> statuses)
+        {
+            var result = new Dictionary<string, SkillDef>();
+            foreach (var (id, name, power, target, kind, applies, followUp) in SkillTable)
+            {
+                var def = LoadOrCreate<SkillDef>($"{ContentRoot}/Combat/Skills/{id}.asset");
+                def.id = id;
+                def.displayName = name;
+                def.power = power;
+                def.target = target;
+                def.kind = kind;
+                def.statusTurns = 3;
+                def.appliesStatus = applies != null ? statuses[applies] : null;
+                def.followUpOn = followUp != null ? statuses[followUp] : null;
+                EditorUtility.SetDirty(def);
+                result[id] = def;
+            }
+            return result;
+        }
+
+        private static PartyMemberDef Member(string id, string displayName, RuntimeAnimatorController animator, Color tint,
+            int maxHp, int attack, int defense, int speed, SkillDef[] skills)
+        {
+            var def = LoadOrCreate<PartyMemberDef>($"{ContentRoot}/Party/{id}.asset");
+            def.id = id;
+            def.displayName = displayName;
+            def.animator = animator;
+            def.tint = tint;
+            def.maxHp = maxHp;
+            def.attack = attack;
+            def.defense = defense;
+            def.speed = speed;
+            def.hpPerLevel = 6;
+            def.attackPerLevel = 1;
+            def.defensePerLevel = 1;
+            def.speedPerLevel = 1;
+            def.startSkills = skills;
+            EditorUtility.SetDirty(def);
+            return def;
         }
 
         private static BiomeDef Biome(string assetName, string id, Sprite[] floors, Sprite[] walls, Sprite stairs,

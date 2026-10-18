@@ -17,6 +17,8 @@ Zweck: Nachweis für UF1 (Effizienz) und UF3 (Architekturmetriken), Anforderung 
 | 7 | 02.10.2026 | Gameplay-Systeme | **Stage System** (Grid, Generator, Session, Gegnerbewegung, Pathfinder, Views, Controller, Content, Szenen) inkl. Dokumentation | "Baue jetzt das Stage System weiter" | ca. 23 min (16:41–17:04) inkl. Diagnose und Dokumentation | offen | Funktionsfähiger Ablauf Hub → Stage → Treppe → Stage 2 und Gegnerkontakt → Kampfplatzhalter → Flucht, 94 Tests grün | Größter Zeitanteil: Diagnose der unsichtbaren Sprites (B1) und Play-Mode-Tests im nicht fokussierten Editor (B2). Details in Konzept Abschnitt 13 |
 | 8 | 11.10.2026 | Gameplay-Systeme | **Fehlerbehebung Stage System:** Pivot der Bodentiles (B5), Blickrichtung mit Idle je Richtung (A23, B7), Geh-Animation (B6, A24) | Drei visuelle Fehler benannt: Pivot, fehlende Idle-Animationen je Blickrichtung, Geh-Animation zeigt nur ein Bild und wird von Idle unterbrochen | ca. 12 min (12:49–13:01) inkl. Dokumentation | offen | Pivot aller 173 Sprites einheitlich Mitte, 8 Animator-Zustände (Idle und Gehen je Richtung), Zyklus läuft über Schritte durch. 102 Tests grün (+8), im Play Mode geprüft (Bildfolge je Frame, Screenshot der Stage) | Die Fehler B6 und B7 lagen im KI-Code, B5 in den Eingangsdaten. Zwei Entscheidungen der KI (A23, A24) vom Autor bestätigt, ebenso A15–A22 und die Dokumentation (D6, D7, B5–B8). Echtzeit und Optik (Tempo des Zyklus) per MCP nicht beurteilbar, bitte einmal in der Stage ansehen |
 
+| 9 | 11.10.2026 | Gameplay-Systeme | **Combat System** (Kern, Kette, Gegner-KI, Party, XP, Power-up-Wirkung, Inhalte, Kampfansicht) inkl. Dokumentation | "Starte jetzt mit dem Combat System" | ca. 21 min (13:25–13:46) inkl. Diagnose und Dokumentation | offen | Funktionsfähig: Kampf mit Kette, Flucht, Sieg mit XP und Levelaufstieg, Niederlage → GameOver → Hub, Pickups wirken. 170 EditMode-Tests grün (+68), im Play Mode über echte Eingabe-Events geprüft | 13 neue Annahmen A25–A37 ungeprüft. Kampfmenü nur über Zustand geprüft, nicht als Bild (B9). `TempCombatStub` gelöscht |
+
 n. g. = nicht gemessen.
 
 ## Kennzahlen Fundament (für Folie 16)
@@ -73,6 +75,35 @@ Beim ersten Kompilieren liefen alle 84 Core-Tests ohne Korrektur. Fehler traten 
 
 Bildfolge der Geh-Animation nach der Behebung (60 Bilder/s, Schritt 0,14 s, 5 Schritte nach rechts, danach Stopp, Drehen nach oben, ein Schritt nach links):
 `walkRight` Sprites 14, 15, 14, 16, 14, 15, 14, 16 ... ohne Idle dazwischen und ohne Neustart je Schritt. Danach `idleRight` (14), `idleUp` (8), `walkLeft` (11, 12), `idleLeft` (11). Vorher: nur Sprite 14 oder 11 je Schritt, danach Idle.
+
+## Kennzahlen Combat System (11.10.2026, Zeile 9)
+
+Zählung mit Skript (Typen per Regex, daher ca.).
+
+| Metrik | Wert |
+|---|---|
+| Neue Quelldateien Produktivcode (`.cs`) | 14 (Core 10 inkl. `AssemblyInfo`, Data 3, Game 1) |
+| Neue Typen Produktivcode | ca. 41 |
+| Neue Zeilen Produktivcode | ca. 1950 (davon `CombatController` 683, Kampf-Core ca. 920) |
+| Neue Testdateien / Zeilen | 6 / ca. 1150 |
+| Geänderte Quelldateien | 7 (`RunState`, `GameEvents`, `EnemyDef`, `GameContent`, `ContentBuilder`, `StageController`, `StageDebugOverlay`), 1 gelöscht (`TempCombatStub`) |
+| Geänderte Zeilen in bestehenden Dateien (git diff) | +292 / -84 |
+| Bestehende Klassen verändert | 7 von 50 Dateien (Core-Regeln des Stage Systems unverändert, `StageSession` unberührt) |
+| Gesamt nach Combat | 50 Quelldateien, ca. 4820 Zeilen, ca. 97 Typen (Produktiv). 17 Testdateien, ca. 2580 Zeilen |
+| EditMode-Tests | 102 → 170 (+68, alle grün) |
+| Content-Assets (per `ContentBuilder`) | +3 Status, +12 Skills, +4 Partymitglied-Definitionen, 6 `EnemyDef` erweitert |
+| Neue Assembly Definitions | 0 (Test-Assembly bekommt `CC.Game`, Core `InternalsVisibleTo`) |
+
+Zeitverlauf (grob geschätzt aus dem Ablauf der Werkzeugaufrufe, nicht einzeln gemessen):
+
+| Phase | Uhrzeit | Dauer |
+|---|---|---|
+| Vorgaben lesen (Konzept 5.3–5.6, GDD, vorhandene Anschlussstellen) | 13:25–13:30 | ca. 5 min |
+| Core schreiben (Kampf, Party, Power-ups) und Core-Tests | 13:30–13:37 | ca. 7 min |
+| Data, `ContentBuilder`, `CombatController`, Szenenverdrahtung | 13:37–13:45 | ca. 8 min |
+| Play-Mode-Prüfung (inkl. Sofortmodus, Niederlage-Pfad), Dokumentation | 13:45–13:46 | ca. 1 min |
+
+Zwei Testläufe nach dem Core waren nötig: Fünf Tests schlugen wegen Fehlern im Testcode fehl (geteilter Zustand zwischen Tests, ein Konter des Gegners im Zähler), die Spiellogik musste nicht korrigiert werden (B11).
 
 ## Offene Punkte aus Zeile 3 (für Metriken Folie 16)
 

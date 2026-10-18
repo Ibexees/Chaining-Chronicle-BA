@@ -5,7 +5,7 @@
 | Basis | `GDD_Chaining_Chronicle` v1.0 (06.03.2026) |
 | Engine | Unity 6000.3.8f1, URP 2D, Input System 1.18, 2D Tilemap, Test Framework 1.6 |
 | Erstellt von | Claude Code (Sonnet 5.5), Prompt: "Architekturkonzept basierend auf dem GDD" |
-| Stand | 11.10.2026, Version 0.5 (Fehlerbehebung Stage System: Pivot, Blickrichtung, Geh-Animation; A15–A24 bestätigt, D6–D7 und B5–B8 vom Autor geprüft) |
+| Stand | 11.10.2026, Version 0.6 (Combat System umgesetzt: A25–A37 neu und ungeprüft, D8–D13, B9–B11) |
 | Zweck | Methodik-Schritt "Architektur vor Umsetzung" (Folie 15), Grundlage für UF3 |
 
 Das Dokument beschreibt Ziele, Struktur, Verantwortlichkeiten und Reihenfolge. Es enthält bewusst keinen Implementierungscode. Alle Stellen, an denen das GDD nichts oder Mehrdeutiges sagt, sind in Abschnitt 11 als **Annahmen** gelistet (Material für UF4).
@@ -332,6 +332,24 @@ Neue Annahmen der KI bei der Fehlerbehebung am Stage System (11.10.2026). **Beid
 | A23 | 2.2.3 "facing the object", Baseline-Grafiken | Die Baseline hat nur eine Idle-Animation (nach unten). Wie sieht der stehende Spieler in die anderen Richtungen aus? | Nach unten bleibt die vorhandene animierte Idle-Animation. Nach oben, links und rechts steht der Spieler in der neutralen Pose (erstes Bild) des jeweiligen Geh-Clips, als stehendes Einzelbild. Rechts nutzt den vorhandenen `walkRight`-Clip, es wird nicht mehr gespiegelt. Neue Grafiken wurden nicht erzeugt |
 | A24 | 2.2.2 Rundenmodell, Geh-Animation | Wie lange dauert ein Geh-Zyklus im Verhältnis zum Schritt (0,14 s)? Wann geht der Spieler in Idle? | Ein Zyklus (Bein links, Mitte, Bein rechts, Mitte) umfasst zwei Schritte, also ein Fuß je Schritt (`stepsPerWalkCycle` = 2, einstellbar). Der Zyklus läuft über aufeinanderfolgende Schritte durch und wird nicht pro Schritt neu gestartet. Idle erst nach 0,06 s ohne weitere Eingabe |
 
+Neue Annahmen der KI beim Combat System (Meilenstein 14.11., umgesetzt am 11.10.2026), **noch nicht** vom Autor geprüft. Alle Zahlenwerte sind Platzhalter ohne GDD-Grundlage und werden in der Finalisierung balanciert:
+
+| Nr | GDD-Stelle | Mehrdeutigkeit | Annahme der KI |
+|---|---|---|---|
+| A25 | 2.1.1 "increasing difficulty", 6.1 | Wie stark sind Gegner und Held? | Held: 30 LP, ANG 5, VER 2, TMP 10, je Level +6/+1/+1/+1. Gegner (Level 1): Maus 14/3/0/12, Kapuzenmann 20/4/1/9, Böses Auge 18/5/0/8, Walross 38/5/3/5, Lebende Rüstung 34/6/5/4, Magmaei 28/8/2/7. Je Level +4 LP und +1 ANG. Gegnerlevel = Stagenummer (A19). Die Maus nutzt die Zufalls-KI, alle anderen die FSM |
+| A26 | 2.1.5 "fighting for XP" | Wie viel XP, an wen? | Belohnung = `BaseXp` des Gegners mal sein Level, jeder lebende Charakter bekommt den vollen Betrag (keine Aufteilung). Schwelle zum nächsten Level: 20 mal aktuelles Level |
+| A27 | 2.1.5 "worth it or too risky regarding their health pool" | Regenerieren Lebenspunkte? | Nein. LP bleiben über Kämpfe und Stages erhalten. Ein Level-Up heilt nur den Zuwachs der Max-LP, keine Vollheilung. Heilen geht nur mit Heil-Skills im Kampf (`Mend`) |
+| A28 | 2.2.5 | Kosten Skills etwas (MP, Abklingzeit)? | Nein. Jeder Charakter hat pro Runde eine Aktion, die Wahl des Skills ist die einzige Entscheidung. Der Held startet mit Slash und Mend |
+| A29 | 3.3, 8 | Wie sehen gefundene Partymitglieder aus? | Es gibt nur die Grafik des Helden. Rekruten nutzen ihren Animator und unterscheiden sich durch eine Farbtönung. Keine neuen Grafiken erzeugt |
+| A30 | 2.2.6 Economy | Gibt es ein Inventar-Menü? Wie werden Power-ups verteilt? | Nein, die Verteilung ist automatisch. Rüstung: Verteidigung +1 für alle. Chain-Skill: Zufallsskill aus dem Pool an das erste Mitglied mit freiem Slot, das ihn noch nicht kennt (4 Slots je Charakter), sonst verfällt er. Rekrut: Typ und Name zufällig aus dem Pool, nicht bei voller Party |
+| A31 | 1.1 "if the afflicted status matches" | Was löst eine Kette aus, wie lange hält ein Status? | Der Status, den die Aktion **gerade** auf das überlebende Ziel gelegt hat, nicht ein bestehender. Ein Status hält 3 Züge des Betroffenen, erneutes Auflegen frischt auf (kein Stapeln). Er hat sonst keine Wirkung (kein Schaden über Zeit) |
+| A32 | 3.3 | Wie groß ist die Party? | Höchstens 4 Charaktere |
+| A33 | A7 | Auf welchem Level kommt ein Rekrut? | Auf dem durchschnittlichen Level der Party (abgerundet, mindestens 1), mit der bisherigen Rüstung |
+| A34 | 2.1 Permadeath | Was passiert mit gefallenen Partymitgliedern? | Sie bleiben für den Rest des Runs kampfunfähig (kein Wiederbeleben). Der Run endet, wenn alle gefallen sind |
+| A35 | A3, A12, 1.1 | Was zählt die Kettenobergrenze (5)? Wer darf einsteigen? | Die Zahl der Aktionen der Kette **einschließlich** der auslösenden, also höchstens 5. Einsteigen darf der schnellste Lebende der handelnden Seite mit passendem Skill, auch der Auslöser selbst und derselbe Charakter mehrmals. Follow-ups sind Schadensskills gegen dasselbe Ziel. Die Zusatzregel "gleicher Skill nur einmal je Charakter" ist umgesetzt, aber standardmäßig aus |
+| A36 | 2.2.1 | Wie viele Gegner kämpfen? | Nur der Gegner, mit dem der Spieler kollidiert ist, gegen die ganze Party. Weitere Gegner der Stage schließen sich nicht an |
+| A37 | 2.2.5 | Schadensformel | Schaden = Skill-Power + Angriff des Nutzers − Verteidigung des Ziels, mindestens 1. Heilung = Power + Angriff/2, begrenzt auf die Max-LP. Kein Zufall, keine Fehlschläge |
+
 ---
 
 ## 12. Risiken
@@ -347,7 +365,7 @@ Neue Annahmen der KI bei der Fehlerbehebung am Stage System (11.10.2026). **Beid
 
 ## 13. Abweichungen und Befunde während der Umsetzung
 
-Stand Stage System. Jeder Punkt ist ein Material für UF2 (Limitationen) oder UF3 (Architektur).
+Stand Combat System. Jeder Punkt ist ein Material für UF2 (Limitationen) oder UF3 (Architektur).
 
 ### 13.1 Abweichungen vom Konzept
 
@@ -360,6 +378,12 @@ Stand Stage System. Jeder Punkt ist ein Material für UF2 (Limitationen) oder UF
 | D5 | Kampfübergang erst im Combat-Meilenstein | Übergang `Exploring → Combat → Exploring` ist verdrahtet, der Kampf selbst ist der Platzhalter `TempCombatStub` | Damit Gegnerkollision, Entfernen des Gegners (Sieg und Flucht) und der Wechsel der Eingabe schon jetzt prüfbar sind |
 | D6 | Baseline-Assets in `Assets/Export` bleiben unverändert (CLAUDE.md) | Die Importeinstellungen (Pivot) von `Tiles-Sheet.png` (16 Slices) und `SnowTile.png` wurden auf Mitte gesetzt. Nur die `.meta`-Dateien ändern sich, die Bilddateien nicht. Umsetzung durch `SpritePivotNormalizer`, aufgerufen vom `ContentBuilder` | Ausdrücklicher Auftrag des Autors (11.10.2026): alle Sprites verwenden denselben Pivot (B5) |
 | D7 | Player-Animator mit `idle` und drei Geh-Zuständen (v0.3) | Acht Zustände: `idle` und `walk` je Richtung (Oben, Unten, Links, Rechts), Float-Parameter `walkSpeed`. Geh-Clips werden vom `ContentBuilder` auf gleichmäßige Phasen und genau eine Sekunde Länge normiert, Idle-Posen aus den Geh-Clips abgeleitet. `PlayerView` kennt `Face`, `Walk`, `StopWalking` | Behebung von B6 und B7, siehe A23 und A24 |
+| D8 | Ein `PowerUpInventory`, `ExperienceService` und `Score` (5.5) | Kein Inventar. XP und Levelaufstieg in `PartyMember.GainXp`, Power-up-Wirkung in `PowerUpEffects` (A30). `Score` entfällt bis zum UI-Meilenstein (Leaderboard) | Ein Inventar ohne Auswahlmenü wäre eine leere Hülle. Die Logik ist trotzdem getrennt und getestet |
+| D9 | `ChainConfig` als ScriptableObject (6) | `ChainConfig` ist eine Core-Klasse, die Werte (`chainMax`, `sameSkillOncePerCharacter`) liegen als Felder in `GameContent` | Zwei Werte rechtfertigen kein eigenes Asset |
+| D10 | `StatusEffect` verwaltet Stapelregeln (5.3) | Status sind Marker mit Dauer, wiederholtes Auflegen frischt nur auf (A31). `StatusDef` enthält nur Name und Farbe, die Dauer steht am Skill | Für den MVP genügt es, Stapelregeln sind ein Erweiterungspunkt |
+| D11 | `CombatView` als eigene Ansicht, `ChainCounterView` (5.3, 5.4) | Eine Klasse `CombatController` (IMGUI plus Sprites im Kamerabild). Der Kettenzähler ist Teil davon, keine eigene View. `TempCombatStub` ist gelöscht | Meilenstein verlangt "rudimentär", das HUD kommt im UI-Meilenstein (13.3) |
+| D12 | `CombatSession` kennt Phase `Resolving` (5.3) | Die Session ist synchron. `Resolving` und `NotStarted` existieren nur als Zustand während eines Aufrufs. Statt Phasen-Ereignissen liefert jeder Aufruf eine Liste von `CombatEvent`, die die View abspielt | Einfacher zu testen als Callbacks, und die Animation bleibt aus dem Core |
+| D13 | Core-Typen werden nie von Assets referenziert (6) | Zusätzlich `PartyMemberSpec`, `EnemySpec` als Core-Kopien von `PartyMemberDef` und `EnemyDef` sowie `IPartyCatalog`, das `GameContent` implementiert | Die Konverter-Regel aus 6, angewendet auf die neuen Definitionen |
 
 ### 13.2 Befunde
 
@@ -373,11 +397,14 @@ Stand Stage System. Jeder Punkt ist ein Material für UF2 (Limitationen) oder UF
 | B6 | **Geh-Animation zeigte ein Bild.** Ein Schritt dauert 0,14 s, die Geh-Clips der Baseline 0,6 bis 1,4 s. Der Code rief pro Schritt `Animator.Play` auf (Neustart bei 0) und danach sofort Idle. Es erschien nur das erste Bild des Zyklus, zwischen den Schritten blitzte Idle auf. | Fehler im KI-Code. Die Prüfung am 02.10. kontrollierte nur, dass ein Sprite sichtbar ist (B1), nicht den zeitlichen Verlauf. Jetzt als Bildfolge pro Frame belegt (siehe Zeitlog, Kennzahlen Fehlerbehebung) |
 | B7 | **Gespiegelter Clip statt vorhandenem `walkRight`.** `PlayerView` hat Rechts durch Spiegeln von `walkLeft` ersetzt, obwohl `walkRight.anim` mit eigenen Sprites existiert (Atlas-Zeile 5). | Eigene Annahme ("drei Richtungen") wurde nicht gegen die Assets geprüft. Fehler im KI-Code, beim Beheben von B6 entdeckt |
 | B8 | **Länge von Sprite-Clips.** Unity setzt die Länge eines Sprite-Clips auf letzten Key plus ein Bild (bei 60 fps 1,0167 s statt 1 s). | Aufgefallen durch einen fehlgeschlagenen Test beim ersten Lauf. Der Schlusskey liegt nun ein Bild vor der Sekunde |
+| B9 | **Kampfansicht nicht als Bild prüfbar.** Die IMGUI-Oberfläche (Menü, Lebensbalken, Log) erscheint nicht in einem Kamera-Render, und `ScreenCapture` liefert im nicht fokussierten Editor keine Datei. Geprüft sind nur Zustand, Log und die Figuren im Kamerabild. | Das Aussehen und die Lesbarkeit des Kampfmenüs sind unbelegt und müssen vom Autor angesehen werden (manuell, Konzept 8). Erweitert B2 |
+| B10 | **Verschachtelte Coroutinen kosten ein Bild.** Ein `yield return` auf eine weitere Coroutine setzt erst im nächsten Frame fort, auch bei Wartezeit 0. Im angehaltenen Editor blieb ein Kampf deshalb mitten in der Wiedergabe hängen. | Der Kampf hat einen Sofortmodus (`actionSeconds` = 0), der gar nicht yieldet, analog zu `stepSeconds` auf der Stage. Danach liefen ganze Kämpfe in einem MCP-Aufruf |
+| B11 | **Werkzeugumgebung:** Mehrere Heredocs mit Skript und Anführungszeichen in einem Shell-Aufruf scheiterten mehrfach (`unexpected EOF`). Dateien werden zuverlässig über das Schreibwerkzeug angelegt und per Skriptdatei gepatcht. Einzelne Testfehler lagen am Testcode selbst (geteilter Zustand zwischen Tests, `params` mit benanntem Argument), nicht an der Spiellogik | Kostet Iterationen, ändert aber das Ergebnis nicht (UF2) |
 
 ### 13.3 Temporäre Platzhalter (werden ersetzt)
 
 | Klasse | Ersetzt durch | Meilenstein |
 |---|---|---|
-| `Game/Dev/TempCombatStub` | Combat System (`CombatSession`, `CombatView`) | Combat |
+| `Game/Combat/CombatController` (IMGUI-Menü, Balken, Log) | HUD mit Kampfmenü, ChainCounter und Combat-Log | UI |
 | `Game/Dev/StageDebugOverlay` (IMGUI) | HUD | UI |
 | `Game/Hub/HubController` (IMGUI-Hinweis, Enter startet Run) | Hub mit Leaderboard und Namenseingabe | UI |

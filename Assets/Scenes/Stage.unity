@@ -131,8 +131,8 @@ GameObject:
   - component: {fileID: 1699309276}
   - component: {fileID: 1699309275}
   - component: {fileID: 1699309274}
-  - component: {fileID: 1699309273}
   - component: {fileID: 1699309272}
+  - component: {fileID: 1699309278}
   m_Layer: 0
   m_Name: StageRoot
   m_TagString: Untagged
@@ -153,19 +153,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CC.Game::CC.Game.Dev.StageDebugOverlay
   stage: {fileID: 1699309274}
---- !u!114 &1699309273
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1699309271}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ea951bec87fd9549ac379d6f47c6aff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CC.Game::CC.Game.Dev.TempCombatStub
-  stage: {fileID: 1699309274}
 --- !u!114 &1699309274
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -183,6 +170,7 @@ MonoBehaviour:
   playerInput: {fileID: 1699309275}
   cameraFollow: {fileID: 1891403401}
   stepSeconds: 0.14
+  stepsPerWalkCycle: 2
 --- !u!114 &1699309275
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -222,6 +210,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1699309278
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1699309271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a4fe173e98654f43a9cab6e60579ac2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CC.Game::CC.Game.Combat.CombatController
+  stage: {fileID: 1699309274}
+  actionSeconds: 0.55
 --- !u!1 &1891403397
 GameObject:
   m_ObjectHideFlags: 0

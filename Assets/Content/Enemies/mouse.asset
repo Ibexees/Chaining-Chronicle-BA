@@ -16,3 +16,15 @@ MonoBehaviour:
   displayName: Mouse
   animator: {fileID: 9100000, guid: ff09d5fc1c2b40545a174d2d752626ac, type: 2}
   firstStage: 1
+  maxHp: 14
+  attack: 3
+  defense: 0
+  speed: 12
+  hpPerLevel: 4
+  attackPerLevel: 1
+  defensePerLevel: 0
+  speedPerLevel: 0
+  skills:
+  - {fileID: 11400000, guid: 4cc406feaea6d3140b4ae5b4ad9550b4, type: 2}
+  ai: 1
+  baseXp: 8

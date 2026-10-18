@@ -42,6 +42,10 @@ namespace CC.Game.Stage
         private float _idleTimer;
 
         public StageSession Session => _session;
+        public RunState Run => _run;
+        public GameContent Content => content;
+        /// <summary>Short message about the last power-up. Shown by the HUD placeholder until the UI milestone.</summary>
+        public string Notice { get; private set; } = "";
         public int StageNumber => _run?.StageNumber ?? 0;
         public int Seed => _run?.Seed ?? 0;
 
@@ -55,6 +59,8 @@ namespace CC.Game.Stage
             }
 
             _run = _flow.Run;
+            // The hero comes from the design data, which Core and GameFlow do not know.
+            if (_run.Party.Count == 0) _run.Party.Add(content.CreateHero(_run.CharacterName));
             _entityRoot = new GameObject("Entities").transform;
             _entityRoot.SetParent(transform, false);
             BuildStage(_run.StageNumber);
@@ -154,6 +160,7 @@ namespace CC.Game.Stage
                         Destroy(pickupView.gameObject);
                         _pickupViews.Remove(result.PickupId);
                     }
+                    if (result.Pickup.HasValue) ApplyPowerUp(result.Pickup.Value, result.PickupId);
                     yield return Animate(result, playerMoves: false);
                     break;
 
@@ -177,6 +184,23 @@ namespace CC.Game.Stage
             }
 
             _busy = false;
+        }
+
+        /// <summary>Gives the effect of a collected power-up to the party (GDD 2.2.6). Rules live in PowerUpEffects.</summary>
+        private void ApplyPowerUp(PickupKind kind, int pickupId)
+        {
+            var rng = new SeededRng(_run.Seed).Derive(2000 + _run.StageNumber * 100 + pickupId);
+            var effect = PowerUpEffects.Apply(kind, _run.Party, content, rng);
+
+            switch (effect.Outcome)
+            {
+                case PickupOutcome.RecruitJoined: Notice = $"{effect.Member.Name} joined the party (level {effect.Member.Level})"; break;
+                case PickupOutcome.PartyFull: Notice = "The party is full, nobody joined"; break;
+                case PickupOutcome.ArmorEquipped: Notice = $"Armor found: defense +{PowerUpEffects.ArmorDefense} for everyone"; break;
+                case PickupOutcome.SkillLearned: Notice = $"{effect.Member.Name} learned {effect.Skill.Name}"; break;
+                case PickupOutcome.NoFreeSlot: Notice = "No free skill slot, the skill is lost"; break;
+                default: Notice = "Nothing to gain"; break;
+            }
         }
 
         private IEnumerator Animate(TurnResult result, bool playerMoves)

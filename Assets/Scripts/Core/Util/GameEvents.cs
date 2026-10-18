@@ -1,4 +1,5 @@
 using System;
+using CC.Core.Combat;
 using CC.Core.Flow;
 using CC.Core.Grid;
 using CC.Core.Stage;
@@ -23,6 +24,9 @@ namespace CC.Core.Util
         /// <summary>Argument: id of the enemy that shares the player's cell.</summary>
         public static event Action<int> EnemyEngaged;
         public static event Action<PickupKind> PowerUpCollected;
+        /// <summary>Argument: number of actions in the running chain (the starting action counts).</summary>
+        public static event Action<int> ChainCounterChanged;
+        public static event Action<CombatOutcome> CombatEnded;
 
         public static void RaiseFlowStateChanged(GameFlowState previous, GameFlowState next) =>
             FlowStateChanged?.Invoke(previous, next);
@@ -39,6 +43,10 @@ namespace CC.Core.Util
 
         public static void RaisePowerUpCollected(PickupKind kind) => PowerUpCollected?.Invoke(kind);
 
+        public static void RaiseChainCounterChanged(int count) => ChainCounterChanged?.Invoke(count);
+
+        public static void RaiseCombatEnded(CombatOutcome outcome) => CombatEnded?.Invoke(outcome);
+
         /// <summary>Removes all subscribers. Used for tests and when entering play mode without domain reload.</summary>
         public static void ClearSubscribers()
         {
@@ -49,6 +57,8 @@ namespace CC.Core.Util
             PlayerMoved = null;
             EnemyEngaged = null;
             PowerUpCollected = null;
+            ChainCounterChanged = null;
+            CombatEnded = null;
         }
     }
 }
